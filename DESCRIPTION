@@ -1,0 +1,18 @@
+Package: RscTools
+Title: Utility R Functions for Single-cell RNA-seq Analysis
+Version: 0.0.0.9000
+Authors@R: 
+    person("Zirun", "Li", , "lizirun123@icloud.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0000-2471-898X"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    ggplot2,
+    dplyr,
+    tibble,
+    scales
+Suggests:
+    Seurat
