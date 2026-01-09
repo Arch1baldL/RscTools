@@ -13,7 +13,7 @@
 #' @return A Seurat object with a new 'SCT' assay containing regressed data.
 #' @export
 
-run_cc_regress <- function(obj, species = "mouse") {
+run_cc_regression <- function(obj, species = "mouse") {
   # 1. Species Check and Gene List Preparation
   species_lower <- tolower(species)
 
@@ -21,15 +21,15 @@ run_cc_regress <- function(obj, species = "mouse") {
     # Convert human genes to Title Case for Mouse (e.g., MKI67 -> Mki67)
     s_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$s.genes)
     g2m_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$g2m.genes)
-    message(paste0(">>> [run_cc_regress] Species: Mouse. Using Title Case gene symbols."))
+    message(paste0(">>> [run_cc_regression] Processing with mouse gene symbols."))
   } else if (species_lower == "human") {
     # Use default human genes (All Caps)
     s_genes <- Seurat::cc.genes.updated.2019$s.genes
     g2m_genes <- Seurat::cc.genes.updated.2019$g2m.genes
-    message(paste0(">>> [run_cc_regress] Species: Human. Using default gene symbols."))
+    message(paste0(">>> [run_cc_regression] Processing with human gene symbols."))
   } else {
     # Matches your request: Stop if species is not supported
-    stop(paste0("Error: Unsupported species '", species, "'. (暂不支持此物种)"))
+    stop(paste0("Error: Unsupported species '", species, "'."))
   }
 
   # 2. Verify Gene Overlap
@@ -66,6 +66,7 @@ run_cc_regress <- function(obj, species = "mouse") {
     verbose = FALSE
   )
 
-  message(">>> Finished: run_cc_regress (SCT assay updated)\n")
+  message(">>> Finished: Cell cycle has been regressed out based on SCT.
+")
   return(obj)
 }
