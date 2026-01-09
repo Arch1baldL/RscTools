@@ -14,7 +14,7 @@ run_qc(
 )
 }
 \arguments{
-\item{object_list}{A named list of Seurat objects.}
+\item{object_list}{A Seurat object or a named list of Seurat objects.}
 
 \item{species}{Character string indicating the species. Currently supports "mouse" (default) and "human".}
 

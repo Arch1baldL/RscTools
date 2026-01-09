@@ -4,7 +4,7 @@
 #' calculating mitochondrial percentage, filtering cells based on QC metrics, plotting QC violin plots,
 #' and running standard preprocessing steps (NormalizeData, FindVariableFeatures, and ScaleData).
 #'
-#' @param object_list A named list of Seurat objects.
+#' @param object_list A Seurat object or a named list of Seurat objects.
 #' @param species Character string indicating the species. Currently supports "mouse" (default) and "human".
 #' @param max_nFeature_RNA Numeric. Filtering threshold for maximum number of genes per cell. Default is 5000.
 #' @param max_percent_mt Numeric. Filtering threshold for maximum mitochondrial percentage. Default is 3.
@@ -25,6 +25,7 @@ run_qc <- function(object_list,
                    max_percent_mt = 3,
                    scale_all_genes = TRUE,
                    plot_qc = TRUE) {
+    input_was_single <- FALSE
     # --- 1. Species Check and Matching Logic ---
     species_lower <- tolower(species)
 
@@ -38,8 +39,11 @@ run_qc <- function(object_list,
     }
 
     # --- 2. Input Validation ---
-    if (!is.list(object_list) || inherits(object_list, "Seurat")) {
-        stop("Error: 'object_list' must be a list of Seurat objects, not a single Seurat object.")
+    if (inherits(object_list, "Seurat")) {
+        object_list <- list(Sample_1 = object_list)
+        input_was_single <- TRUE
+    } else if (!is.list(object_list)) {
+        stop("Error: 'object_list' must be a Seurat object or a list of Seurat objects.")
     }
 
     # Ensure every element is a Seurat object before processing
@@ -58,6 +62,7 @@ run_qc <- function(object_list,
 
     # --- 3. Define Internal Processing Function ---
     .process_single <- function(sobj, name) {
+        tmp_group <- "__qc_all__"
         message(paste0(">>> Processing: ", name, " [Species: ", species_lower, "]"))
 
         # Calculate mitochondrial percentage
@@ -75,9 +80,12 @@ run_qc <- function(object_list,
             return(NULL)
         }
 
+        # Create a temporary constant group to force single-group violin plots
+        sobj[["all"]] <- "all"
+
         # Plot before filtering
         if (plot_qc) {
-            p1 <- Seurat::VlnPlot(sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3) +
+            p1 <- Seurat::VlnPlot(sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = "all") +
                 patchwork::plot_annotation(
                     title = paste0(name, " (Pre-filter)"),
                     subtitle = paste("Species:", species)
@@ -90,7 +98,7 @@ run_qc <- function(object_list,
 
         # Plot after filtering
         if (plot_qc) {
-            p2 <- Seurat::VlnPlot(sobj_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3) +
+            p2 <- Seurat::VlnPlot(sobj_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = "all") +
                 patchwork::plot_annotation(title = paste(name, " (Post-filter)"))
             print(p2)
         }
@@ -105,6 +113,11 @@ run_qc <- function(object_list,
             sobj_filtered <- Seurat::ScaleData(sobj_filtered, features = all_genes, verbose = FALSE)
         } else {
             sobj_filtered <- Seurat::ScaleData(sobj_filtered, verbose = FALSE)
+        }
+
+        # Clean up temporary grouping column
+        if ("all" %in% colnames(sobj_filtered[[]])) {
+            sobj_filtered[["all"]] <- NULL
         }
 
         message(paste0(">>> Finished: ", name, " (Cells: ", ncol(sobj_filtered), ")\n"))
@@ -127,6 +140,10 @@ run_qc <- function(object_list,
 
     processed_list <- processed_list[keep_idx]
     names(processed_list) <- names(object_list)[keep_idx]
+
+    if (input_was_single) {
+        return(processed_list[[1]])
+    }
 
     return(processed_list)
 }
