@@ -17,4 +17,8 @@ Imports:
     scales,
     magrittr,
     patchwork,
-    stats
+    stats,
+    stringr,
+    sctransform
+Suggests: 
+    glmGamPoi
