@@ -62,7 +62,7 @@ run_qc <- function(object_list,
 
     # --- 3. Define Internal Processing Function ---
     .process_single <- function(sobj, name) {
-        tmp_group <- "__qc_all__"
+        tmp_group <- "all"
         message(paste0(">>> Processing: ", name, " [Species: ", species_lower, "]"))
 
         # Calculate mitochondrial percentage
@@ -85,12 +85,11 @@ run_qc <- function(object_list,
 
         # Plot before filtering
         if (plot_qc) {
-            p1 <- Seurat::VlnPlot(sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = "all") +
+            p1 <- Seurat::VlnPlot(sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = tmp_group) +
                 patchwork::plot_annotation(
                     title = paste0(name, " (Pre-filter)"),
                     subtitle = paste("Species:", species)
                 )
-            print(p1)
         }
 
         # Filter cells (Subset)
@@ -98,9 +97,12 @@ run_qc <- function(object_list,
 
         # Plot after filtering
         if (plot_qc) {
-            p2 <- Seurat::VlnPlot(sobj_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = "all") +
+            p2 <- Seurat::VlnPlot(sobj_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = tmp_group) +
                 patchwork::plot_annotation(title = paste(name, " (Post-filter)"))
-            print(p2)
+
+            # Combine before/after into one patchwork figure
+            combined_qc <- patchwork::wrap_plots(p1, p2, ncol = 1)
+            print(combined_qc)
         }
 
         # Normalization and Variable Features
