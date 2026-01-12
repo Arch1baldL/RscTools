@@ -4,21 +4,24 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Zirun", "Li", , "lizirun123@icloud.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0000-2471-898X"))
-Description: What the package does (one paragraph).
+Description: Provides a collection of helper functions for single-cell RNA-seq 
+    analysis.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Imports:
-    Seurat,
-    ggplot2,
+Imports: 
     dplyr,
-    tibble,
-    scales,
+    ggplot2,
+    grid,
     magrittr,
     patchwork,
+    rlang,
+    scales,
+    sctransform,
+    Seurat,
     stats,
     stringr,
-    sctransform
+    tibble
 Suggests: 
     glmGamPoi
