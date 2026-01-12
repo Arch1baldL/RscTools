@@ -3,10 +3,12 @@
 #' This function visualizes single-cell UMAP embeddings with scatter points and
 #' draws density borders around specified cell groups. It automatically handles
 #' UMAP axes with arrows and expands the plotting area to prevent border clipping.
+#' It auto-detects coordinate names based on the provided reduction.
 #'
 #' @param obj A Seurat object containing UMAP coordinates.
 #' @param group_points String. The metadata column name to use for coloring scatter points (e.g., "cell_cluster").
 #' @param group_borders String. The metadata column name to use for drawing borders (e.g., "cell_sub_type").
+#' @param reduction String. The dimensional reduction to use (default is "umap").
 #' @param min_cells Integer. Minimum number of cells required in a group to draw a border. Groups with fewer cells will only show scatter points. Default is 10.
 #' @param expand_ratio Numeric. The ratio to expand the bounding box for density calculation to avoid clipping. Default is 0.3 (30%).
 #' @param pt_size Numeric. Size of the scatter points. Default is 0.5.
@@ -32,10 +34,12 @@
 #'   min_cells = 20
 #' )
 #' }
+
 plot_umap_border <- function(
     obj,
     group_points,
     group_borders,
+    reduction = "umap",
     min_cells = 10,
     expand_ratio = 0.3,
     pt_size = 0.5,
@@ -43,11 +47,20 @@ plot_umap_border <- function(
     label_size = 5
 ) {
 
-  # 1. Extract UMAP coordinates and Metadata
-  # Use Seurat::FetchData
-  umap_data <- Seurat::FetchData(obj, vars = c("UMAP_1", "UMAP_2", group_points, group_borders))
+  # 1. Validation & Coordinate Extraction
+  # Check if reduction exists
+  if (!reduction %in% names(obj@reductions)) {
+    stop(paste0("Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")))
+  }
 
-  # Rename columns for internal consistency
+  # Dynamically get the coordinate names (e.g., "umap_1", "UMAP_1", "PC_1")
+  # Use [[ ]] to access the DimReduc object and get its column names
+  coord_names <- colnames(obj[[reduction]])[1:2]
+
+  # Extract UMAP coordinates and Metadata using the correct names
+  umap_data <- Seurat::FetchData(obj, vars = c(coord_names, group_points, group_borders))
+
+  # Rename columns for internal consistency (Standardize to UMAP_1/UMAP_2 for plotting logic)
   colnames(umap_data) <- c("UMAP_1", "UMAP_2", "group_for_points", "group_for_hulls")
 
   # 2. Filter: Keep only groups with enough cells for border drawing
