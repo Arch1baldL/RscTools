@@ -8,6 +8,7 @@ plot_umap_border(
   obj,
   group_points,
   group_borders,
+  reduction = "umap",
   min_cells = 10,
   expand_ratio = 0.3,
   pt_size = 0.5,
@@ -21,6 +22,8 @@ plot_umap_border(
 \item{group_points}{String. The metadata column name to use for coloring scatter points (e.g., "cell_cluster").}
 
 \item{group_borders}{String. The metadata column name to use for drawing borders (e.g., "cell_sub_type").}
+
+\item{reduction}{String. The dimensional reduction to use (default is "umap").}
 
 \item{min_cells}{Integer. Minimum number of cells required in a group to draw a border. Groups with fewer cells will only show scatter points. Default is 10.}
 
@@ -39,6 +42,7 @@ A ggplot object.
 This function visualizes single-cell UMAP embeddings with scatter points and
 draws density borders around specified cell groups. It automatically handles
 UMAP axes with arrows and expands the plotting area to prevent border clipping.
+It auto-detects coordinate names based on the provided reduction.
 }
 \examples{
 \dontrun{
