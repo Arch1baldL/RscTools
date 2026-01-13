@@ -7,7 +7,7 @@
 #' @param species Character string. Currently supports "mouse" (default) and "human".
 #' It automatically handles gene capitalization (Title Case for mouse, All Caps for human).
 #'
-#' @importFrom Seurat cc.genes.updated.2019 CellCycleScoring SCTransform DefaultAssay
+#' @importFrom Seurat cc.genes.updated.2019 CellCycleScoring SCTransform DefaultAssay NormalizeData
 #' @importFrom stringr str_to_title
 #'
 #' @return A Seurat object with a new 'SCT' assay containing regressed data.
@@ -54,6 +54,15 @@ run_cc_regression <- function(obj, species = "mouse") {
   # --- 3. 细胞周期计分 ---
   # 确保使用 RNA assay（原始计数）进行计分
   Seurat::DefaultAssay(obj) <- "RNA"
+
+  # 若 RNA assay 未进行 LogNormalize，则先补充标准化
+  rna_data <- Seurat::GetAssayData(obj, assay = "RNA", slot = "data")
+  if (length(rna_data@x) == 0) {
+    message(">>> [run_cc_regression] RNA assay not LogNormalized. Running NormalizeData()...")
+    obj <- Seurat::NormalizeData(obj, normalization.method = "LogNormalize", verbose = FALSE)
+  } else {
+    message(">>> [run_cc_regression] RNA assay already contains log-normalized data.")
+  }
 
   obj <- Seurat::CellCycleScoring(obj,
     s.features = s_genes,
