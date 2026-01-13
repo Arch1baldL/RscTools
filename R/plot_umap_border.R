@@ -47,23 +47,23 @@ plot_umap_border <- function(
     label_size = 5
 ) {
 
-  # 1. Validation & Coordinate Extraction
-  # Check if reduction exists
+  # 1. 校验与坐标提取
+  # 检查 reduction 是否存在
   if (!reduction %in% names(obj@reductions)) {
     stop(paste0("Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")))
   }
 
-  # Dynamically get the coordinate names (e.g., "umap_1", "UMAP_1", "PC_1")
-  # Use [[ ]] to access the DimReduc object and get its column names
+  # 动态获取坐标列名（如 "umap_1"、"UMAP_1"、"PC_1"）
+  # 使用 [[ ]] 访问 DimReduc 对象并读取列名
   coord_names <- colnames(obj[[reduction]])[1:2]
 
-  # Extract UMAP coordinates and Metadata using the correct names
+  # 使用正确列名提取坐标与元数据
   umap_data <- Seurat::FetchData(obj, vars = c(coord_names, group_points, group_borders))
 
-  # Rename columns for internal consistency (Standardize to UMAP_1/UMAP_2 for plotting logic)
+  # 统一内部列名（标准化为 UMAP_1/UMAP_2 以复用绘图逻辑）
   colnames(umap_data) <- c("UMAP_1", "UMAP_2", "group_for_points", "group_for_hulls")
 
-  # 2. Filter: Keep only groups with enough cells for border drawing
+  # 2. 过滤：仅保留满足最小细胞数的分组用于绘制边界
   group_counts <- table(umap_data$group_for_hulls)
   valid_groups <- names(group_counts[group_counts >= min_cells])
 
@@ -74,7 +74,7 @@ plot_umap_border <- function(
   umap_data_for_contour <- umap_data %>%
     dplyr::filter(.data$group_for_hulls %in% valid_groups)
 
-  # 3. Expand boundaries (Ghost Points mechanism)
+  # 3. 扩展边界（幽灵点机制）
   umap_data_expanded <- umap_data_for_contour %>%
     dplyr::group_by(.data$group_for_hulls) %>%
     dplyr::group_modify(~ {
@@ -89,12 +89,12 @@ plot_umap_border <- function(
         UMAP_2 = c(range_y[1]-span_y, range_y[2]+span_y, range_y[2]+span_y, range_y[1]-span_y),
         group_for_points = NA
       )
-      # dplyr::bind_rows automatically handles the missing grouping column by adding it from the group context
+      # dplyr::bind_rows 会利用分组上下文自动补齐缺失的分组列
       dplyr::bind_rows(data, ghost_points)
     }) %>%
     dplyr::ungroup()
 
-  # 4. Calculate axis positions
+  # 4. 计算坐标轴位置
   min_x <- min(umap_data$UMAP_1)
   min_y <- min(umap_data$UMAP_2)
   max_x <- max(umap_data$UMAP_1)
@@ -105,13 +105,13 @@ plot_umap_border <- function(
   origin_y <- min_y - offset
   label_gap <- (max_x - min_x) * 0.02
 
-  # 5. Plotting
+  # 5. 绘图
   p <- ggplot2::ggplot(umap_data, ggplot2::aes(x = .data$UMAP_1, y = .data$UMAP_2)) +
 
-    # A. Scatter points
+    # A. 散点
     ggplot2::geom_point(ggplot2::aes(color = .data$group_for_points), size = pt_size, alpha = 0.5) +
 
-    # B. Borders
+    # B. 边界
     ggplot2::stat_density_2d(
       data = umap_data_expanded,
       ggplot2::aes(fill = .data$group_for_hulls, color = .data$group_for_hulls),
@@ -123,8 +123,8 @@ plot_umap_border <- function(
       show.legend = FALSE
     ) +
 
-    # C. Arrow Axes
-    # X Axis
+    # C. 箭头坐标轴
+    # X 轴
     ggplot2::annotate("segment", x = origin_x, xend = origin_x + arrow_len,
              y = origin_y, yend = origin_y,
              arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
@@ -133,7 +133,7 @@ plot_umap_border <- function(
              label = "UMAP_1", hjust = 0, vjust = 1,
              size = label_size, fontface = "bold") +
 
-    # Y Axis
+    # Y 轴
     ggplot2::annotate("segment", x = origin_x, xend = origin_x,
              y = origin_y, yend = origin_y + arrow_len,
              arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
@@ -142,7 +142,7 @@ plot_umap_border <- function(
              label = "UMAP_2", hjust = 0, vjust = 0, angle = 90,
              size = label_size, fontface = "bold") +
 
-    # D. Aesthetics
+    # D. 版式
     ggplot2::theme_void() +
     ggplot2::theme(plot.margin = ggplot2::margin(20, 20, 20, 20)) +
     ggplot2::coord_fixed(clip = "off") +

@@ -1,12 +1,12 @@
 #' Plot PCA Cumulative Explained Variance
 #'
-#' This function visualizes the cumulative explained variance of Principal Components (PCA).
-#' It helps in determining the optimal number of PCs to retain for downstream analysis
-#' by marking the 90% and 95% variance thresholds.
+#' Visualize the cumulative explained variance of principal components (PCA)
+#' and annotate the 90% and 95% thresholds to help decide the number of PCs
+#' to retain for downstream analysis.
 #'
-#' @param obj A Seurat object. Must have PCA reduction computed.
+#' @param obj A Seurat object. Must have the PCA reduction computed.
 #' @param reduction Character. Name of the reduction to use. Default is "pca".
-#' @param max_pcs Integer. Maximum number of PCs to plot. Default is 50.
+#' @param max_pcs Integer. Maximum number of PCs to display. Default is 50.
 #'
 #' @return A ggplot2 object.
 #' @export
@@ -24,34 +24,34 @@
 
 plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
 
-  # 1. Check whether the specified PCA reduction exists
+  # 1. 检查指定的 PCA 降维是否存在
   if (!reduction %in% names(obj@reductions)) {
     stop(paste("Reduction", reduction, "not found in the Seurat object. Please run RunPCA first."))
   }
 
-  # 2. Extract standard deviations and compute cumulative explained variance
-  # Seurat object structure: obj@reductions$pca@stdev
+  # 2. 提取标准差并计算累积解释方差
+  # Seurat 对象结构: obj@reductions$pca@stdev
   stdev <- obj@reductions[[reduction]]@stdev
 
-  # Quick sanity check for a sufficient number of PCs
+  # 快速检查：是否有足够的 PC 数量
   if (length(stdev) < 2) {
     stop("Not enough PCs found to plot.")
   }
 
-  # 3. Compute cumulative explained variance per PC
+  # 3. 逐个 PC 计算累积解释方差
   plot_data <- stdev^2 %>%
     (function(variance) cumsum(variance) / sum(variance)) %>%
     tibble::enframe(name = "PC", value = "Cumulative_Variance") %>%
     dplyr::filter(PC <= max_pcs)
 
-  # Compute threshold PCs (robust in case 90%/95% are not reached)
+  # 计算达到 90%/95% 的阈值所需最小 PC（若未达到则为 NA）
   pc_90_data <- plot_data %>% dplyr::filter(Cumulative_Variance >= 0.90)
   pc_for_90 <- if (nrow(pc_90_data) > 0) min(pc_90_data$PC) else NA
 
   pc_95_data <- plot_data %>% dplyr::filter(Cumulative_Variance >= 0.95)
   pc_for_95 <- if (nrow(pc_95_data) > 0) min(pc_95_data$PC) else NA
 
-  # 4. Visualization
+  # 4. 绘图
   p <- ggplot(plot_data, aes(x = PC, y = Cumulative_Variance)) +
     geom_line(color = "#0072B2", linewidth = 1) +
     geom_point(color = "#0072B2", size = 2.5, alpha = 0.8) +
@@ -68,7 +68,7 @@ plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
       plot.title = element_text(face = "bold")
     )
 
-  # Add dynamic reference lines and labels if thresholds exist
+  # 若阈值存在则添加参考线与标签
   if (!is.na(pc_for_90)) {
     p <- p +
       geom_hline(yintercept = 0.90, linetype = "dashed", color = "#D55E00") +

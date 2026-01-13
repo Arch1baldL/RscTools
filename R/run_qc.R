@@ -26,7 +26,7 @@ run_qc <- function(object_list,
                    scale_all_genes = TRUE,
                    plot_qc = TRUE) {
     input_was_single <- FALSE
-    # --- 1. Species Check and Matching Logic ---
+    # --- 1. 物种检测与匹配规则 ---
     species_lower <- tolower(species)
 
     if (species_lower == "mouse") {
@@ -34,11 +34,11 @@ run_qc <- function(object_list,
     } else if (species_lower == "human") {
         mt_pattern <- "^MT-"
     } else {
-        # Stop if the species is not in the predefined list
+        # 若物种不在预设列表中则报错
         stop(paste0("Error: Unsupported species '", species, "'. Currently supported: 'mouse', 'human'."))
     }
 
-    # --- 2. Input Validation ---
+    # --- 2. 输入校验 ---
     if (inherits(object_list, "Seurat")) {
         object_list <- list(Sample_1 = object_list)
         input_was_single <- TRUE
@@ -46,7 +46,7 @@ run_qc <- function(object_list,
         stop("Error: 'object_list' must be a Seurat object or a list of Seurat objects.")
     }
 
-    # Ensure every element is a Seurat object before processing
+    # 确保列表中的每个元素都是 Seurat 对象
     non_seurat_idx <- which(!vapply(object_list, function(x) inherits(x, "Seurat"), logical(1)))
     if (length(non_seurat_idx) > 0) {
         stop(paste0(
@@ -60,13 +60,13 @@ run_qc <- function(object_list,
         names(object_list) <- paste0("Sample_", seq_along(object_list))
     }
 
-    # --- 3. Define Internal Processing Function ---
+    # --- 3. 定义内部处理函数 ---
     .process_single <- function(sobj, name) {
         tmp_group <- "all"
         message(paste0(">>> Processing: ", name, " [Species: ", species_lower, "]"))
 
-        # Calculate mitochondrial percentage
-        # Use tryCatch to prevent errors if no mitochondrial genes are found
+        # 计算线粒体比例
+        # 使用 try 以避免在找不到线粒体基因时抛错
         try(
             {
                 sobj[["percent.mt"]] <- Seurat::PercentageFeatureSet(sobj, pattern = mt_pattern)
@@ -74,16 +74,16 @@ run_qc <- function(object_list,
             silent = TRUE
         )
 
-        # Abort this sample if percent.mt was not created
+        # 若未成功计算 percent.mt，则跳过该样本
         if (!"percent.mt" %in% colnames(sobj[[]])) {
             warning(paste0("Skipping sample '", name, "': failed to compute percent.mt (check mitochondrial gene pattern)."))
             return(NULL)
         }
 
-        # Create a temporary constant group to force single-group violin plots
+        # 创建临时常量分组以便绘制单组小提琴图
         sobj[["all"]] <- "all"
 
-        # Plot before filtering
+        # 过滤前绘图
         if (plot_qc) {
             p1 <- Seurat::VlnPlot(sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = tmp_group) +
                 patchwork::plot_annotation(
@@ -92,24 +92,24 @@ run_qc <- function(object_list,
                 )
         }
 
-        # Filter cells (Subset)
+        # 过滤细胞（Subset）
         sobj_filtered <- subset(sobj, subset = nFeature_RNA < max_nFeature_RNA & percent.mt < max_percent_mt)
 
-        # Plot after filtering
+        # 过滤后绘图
         if (plot_qc) {
             p2 <- Seurat::VlnPlot(sobj_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, group.by = tmp_group) +
                 patchwork::plot_annotation(title = paste(name, " (Post-filter)"))
 
-            # Combine before/after into one patchwork figure
+            # 合并前后图形
             combined_qc <- patchwork::wrap_plots(p1, p2, ncol = 1)
             print(combined_qc)
         }
 
-        # Normalization and Variable Features
+        # 归一化与可变基因识别
         sobj_filtered <- Seurat::NormalizeData(sobj_filtered, verbose = FALSE)
         sobj_filtered <- Seurat::FindVariableFeatures(sobj_filtered, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
 
-        # ScaleData
+        # ScaleData 缩放
         if (scale_all_genes) {
             all_genes <- rownames(sobj_filtered)
             sobj_filtered <- Seurat::ScaleData(sobj_filtered, features = all_genes, verbose = FALSE)
@@ -117,7 +117,7 @@ run_qc <- function(object_list,
             sobj_filtered <- Seurat::ScaleData(sobj_filtered, verbose = FALSE)
         }
 
-        # Clean up temporary grouping column
+        # 清理临时分组列
         if ("all" %in% colnames(sobj_filtered[[]])) {
             sobj_filtered[["all"]] <- NULL
         }
@@ -126,12 +126,12 @@ run_qc <- function(object_list,
         return(sobj_filtered)
     }
 
-    # --- 4. Batch Execution ---
+    # --- 4. 批处理执行 ---
     processed_list <- lapply(names(object_list), function(n) {
         .process_single(object_list[[n]], n)
     })
 
-    # Drop samples that failed percent.mt computation
+    # 丢弃未成功计算 percent.mt 的样本
     keep_idx <- !vapply(processed_list, is.null, logical(1))
     if (any(!keep_idx)) {
         warning(paste0(

@@ -14,26 +14,26 @@
 #' @export
 
 run_cc_regression <- function(obj, species = "mouse") {
-  # 1. Species Check and Gene List Preparation
+  # 1. 物种检测与基因列表准备
   species_lower <- tolower(species)
 
   if (species_lower == "mouse") {
-    # Convert human genes to Title Case for Mouse (e.g., MKI67 -> Mki67)
+    # 将人类基因符号转为鼠类 Title Case（如 MKI67 -> Mki67）
     s_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$s.genes)
     g2m_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$g2m.genes)
     message(paste0(">>> [run_cc_regression] Processing with mouse gene symbols."))
   } else if (species_lower == "human") {
-    # Use default human genes (All Caps)
+    # 使用默认的人类全大写基因列表
     s_genes <- Seurat::cc.genes.updated.2019$s.genes
     g2m_genes <- Seurat::cc.genes.updated.2019$g2m.genes
     message(paste0(">>> [run_cc_regression] Processing with human gene symbols."))
   } else {
-    # Matches your request: Stop if species is not supported
+    # 按约定：不支持的物种直接停止
     stop(paste0("Error: Unsupported species '", species, "'."))
   }
 
-  # 2. Verify Gene Overlap
-  # Check if genes exist in the dataset to prevent errors in CellCycleScoring
+  # 2. 验证基因重叠
+  # 检查基因是否存在，避免 CellCycleScoring 出错
   all_cc_genes <- c(s_genes, g2m_genes)
   check_overlap <- intersect(rownames(obj), all_cc_genes)
 
@@ -46,8 +46,8 @@ run_cc_regression <- function(obj, species = "mouse") {
     message(paste0(">>> Found ", length(check_overlap), " cell cycle genes. Proceeding to scoring..."))
   }
 
-  # 3. Cell Cycle Scoring
-  # Ensure we are using the RNA assay for scoring (raw counts)
+  # 3. 细胞周期计分
+  # 确保使用 RNA assay（原始计数）进行计分
   Seurat::DefaultAssay(obj) <- "RNA"
 
   obj <- Seurat::CellCycleScoring(obj,
@@ -56,8 +56,8 @@ run_cc_regression <- function(obj, species = "mouse") {
     set.ident = TRUE
   )
 
-  # 4. SCTransform Regression
-  # Regress out the calculated scores
+  # 4. SCTransform 回归
+  # 回归掉已计算的评分
   message(">>> Running SCTransform to regress out S.Score and G2M.Score...")
 
   obj <- Seurat::SCTransform(obj,
