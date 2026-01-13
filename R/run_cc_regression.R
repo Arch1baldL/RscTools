@@ -14,25 +14,30 @@
 #' @export
 
 run_cc_regression <- function(obj, species = "mouse") {
-  # 1. 物种检测与基因列表准备
+  # --- 1. 物种检测与基因列表准备 ---
   species_lower <- tolower(species)
 
+  # 物种：mouse
   if (species_lower == "mouse") {
     # 将人类基因符号转为鼠类 Title Case（如 MKI67 -> Mki67）
     s_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$s.genes)
     g2m_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$g2m.genes)
     message(paste0(">>> [run_cc_regression] Processing with mouse gene symbols."))
+
+  # 物种：human
   } else if (species_lower == "human") {
     # 使用默认的人类全大写基因列表
     s_genes <- Seurat::cc.genes.updated.2019$s.genes
     g2m_genes <- Seurat::cc.genes.updated.2019$g2m.genes
     message(paste0(">>> [run_cc_regression] Processing with human gene symbols."))
+
+  # 不支持的物种
   } else {
-    # 按约定：不支持的物种直接停止
+    # 直接停止
     stop(paste0("Error: Unsupported species '", species, "'."))
   }
 
-  # 2. 验证基因重叠
+  # --- 2. 验证基因重叠 ---
   # 检查基因是否存在，避免 CellCycleScoring 出错
   all_cc_genes <- c(s_genes, g2m_genes)
   check_overlap <- intersect(rownames(obj), all_cc_genes)
@@ -46,7 +51,7 @@ run_cc_regression <- function(obj, species = "mouse") {
     message(paste0(">>> Found ", length(check_overlap), " cell cycle genes. Proceeding to scoring..."))
   }
 
-  # 3. 细胞周期计分
+  # --- 3. 细胞周期计分 ---
   # 确保使用 RNA assay（原始计数）进行计分
   Seurat::DefaultAssay(obj) <- "RNA"
 
@@ -56,7 +61,7 @@ run_cc_regression <- function(obj, species = "mouse") {
     set.ident = TRUE
   )
 
-  # 4. SCTransform 回归
+  # --- 4. SCTransform 回归 ---
   # 回归掉已计算的评分
   message(">>> Running SCTransform to regress out S.Score and G2M.Score...")
 
