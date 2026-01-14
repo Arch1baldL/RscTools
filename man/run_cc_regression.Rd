@@ -2,25 +2,19 @@
 % Please edit documentation in R/run_cc_regression.R
 \name{run_cc_regression}
 \alias{run_cc_regression}
-\title{Cell Cycle Scoring and SCTransform Regression}
+\title{Cell Cycle Scoring and SCTransform Regression (Force Normalize)}
 \usage{
-run_cc_regression(
-  obj,
-  species = "mouse",
-  force_normalize = FALSE,
-  backup_data = TRUE
-)
+run_cc_regression(obj, species = "mouse")
 }
 \arguments{
 \item{obj}{A Seurat object.}
 
-\item{species}{Character string. Currently supports "mouse" (default) and "human".
-It automatically handles gene capitalization (Title Case for mouse, All Caps for human).}
+\item{species}{Character string. Supports "mouse" (default) and "human"; mouse genes are Title Case.}
 }
 \value{
 A Seurat object with a new 'SCT' assay containing regressed data.
 }
 \description{
-This function performs cell cycle scoring based on species-specific gene lists
-and uses SCTransform to regress out cell cycle scores ("S.Score" and "G2M.Score").
+Force-log-normalizes RNA before scoring, then regresses cell cycle via SCTransform.
+Safe to run even if RNA data was already normalized.
 }
