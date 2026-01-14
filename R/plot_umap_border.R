@@ -48,7 +48,7 @@ plot_umap_border <- function(
   # 1. 校验与坐标提取
   # 检查 reduction 是否存在
   if (!reduction %in% names(obj@reductions)) {
-    stop(paste0("❌ [plot_umap_border] Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")), call. = FALSE)
+    stop(paste0(get_icon("error"), "[plot_umap_border] Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")), call. = FALSE)
   }
 
   # 动态获取坐标列名（如 "umap_1"、"UMAP_1"、"PC_1"）
@@ -66,7 +66,7 @@ plot_umap_border <- function(
   valid_groups <- names(group_counts[group_counts >= min_cells])
 
   if (length(valid_groups) == 0) {
-    stop("❌ [plot_umap_border] All groups have fewer cells than 'min_cells'. Cannot draw borders.", call. = FALSE)
+    stop(paste0(get_icon("error"), "[plot_umap_border] All groups have fewer cells than 'min_cells'. Cannot draw borders."), call. = FALSE)
   }
 
   umap_data_for_contour <- umap_data %>%

@@ -56,14 +56,14 @@ run_qc <- function(object_list,
     }
 
     if (is.null(names(object_list))) {
-        warning("⚠️ [run_qc] Input list has no names. Assigning default indices as names.", call. = FALSE)
+        warning(paste0(get_icon("warning"), "[run_qc] Input list has no names. Assigning default indices as names."), call. = FALSE)
         names(object_list) <- paste0("Sample_", seq_along(object_list))
     }
 
     # --- 3. 定义内部处理函数 ---
     .process_single <- function(sobj, name) {
         tmp_group <- "all"
-        message(paste0("▶️ [run_qc] Processing: ", name, " [Species: ", species_lower, "]"))
+        message(paste0(get_icon("step"), "[run_qc] Processing: ", name, " [Species: ", species_lower, "]"))
 
         # v5 层检测：若检测到 RNA assay 为 v5 多层，提示优先合并
         if (exists("run_v5_test")) {
@@ -71,7 +71,7 @@ run_qc <- function(object_list,
             if (!is.null(v5_res) && is.list(v5_res) && !is.null(v5_res[["RNA"]])) {
                 has_v5 <- isTRUE(v5_res[["RNA"]]$is_assay5) || isTRUE(v5_res[["RNA"]]$multi_layer)
                 if (has_v5) {
-                    warning(paste0("⚠️ [run_qc] Sample '", name, "' has Seurat v5 multi-layer in RNA assay. Consider: obj <- run_v5_test(obj, assays = 'RNA', join_layers = TRUE) before QC."), call. = FALSE)
+                    warning(paste0(get_icon("warning"), "[run_qc] Sample '", name, "' has Seurat v5 multi-layer in RNA assay. Consider: obj <- run_v5_test(obj, assays = 'RNA', join_layers = TRUE) before QC."), call. = FALSE)
                 }
             }
         }
@@ -87,7 +87,7 @@ run_qc <- function(object_list,
 
         # 若未成功计算 percent.mt，则跳过该样本
         if (!"percent.mt" %in% colnames(sobj[[]])) {
-            warning(paste0("⚠️ [run_qc] Skipping sample '", name, "': failed to compute percent.mt (check mitochondrial gene pattern)."), call. = FALSE)
+            warning(paste0(get_icon("warning"), "[run_qc] Skipping sample '", name, "': failed to compute percent.mt (check mitochondrial gene pattern)."), call. = FALSE)
             return(NULL)
         }
 
@@ -133,7 +133,7 @@ run_qc <- function(object_list,
             sobj_filtered[["all"]] <- NULL
         }
 
-        message(paste0("✅ [run_qc] Finished: ", name, " (Cells: ", ncol(sobj_filtered), ")"))
+        message(paste0(get_icon("completed"), "[run_qc] Finished: ", name, " (Cells: ", ncol(sobj_filtered), ")"))
         return(sobj_filtered)
     }
 
@@ -146,7 +146,7 @@ run_qc <- function(object_list,
     keep_idx <- !vapply(processed_list, is.null, logical(1))
     if (any(!keep_idx)) {
         warning(paste0(
-            "⚠️ [run_qc] Skipped samples due to missing percent.mt: ",
+            paste0(get_icon("warning"), "[run_qc] Skipped samples due to missing percent.mt: "),
             paste(names(object_list)[!keep_idx], collapse = ", ")
         ), call. = FALSE)
     }

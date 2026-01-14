@@ -24,7 +24,7 @@
 plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
   # 1. 检查指定的 PCA 降维是否存在
   if (!reduction %in% names(obj@reductions)) {
-    stop(paste0("❌ [plot_pca_variance] Reduction '", reduction, "' not found in the Seurat object. Please run RunPCA first."), call. = FALSE)
+    stop(paste0(get_icon("error"), "[plot_pca_variance] Reduction '", reduction, "' not found in the Seurat object. Please run RunPCA first."), call. = FALSE)
   }
 
   # 2. 提取标准差并计算累积解释方差
@@ -33,7 +33,7 @@ plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
 
   # 快速检查：是否有足够的 PC 数量
   if (length(stdev) < 2) {
-    stop("❌ [plot_pca_variance] Not enough PCs found to plot.", call. = FALSE)
+    stop(paste0(get_icon("error"), "[plot_pca_variance] Not enough PCs found to plot."), call. = FALSE)
   }
 
   # 3. 逐个 PC 计算累积解释方差

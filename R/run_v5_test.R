@@ -67,19 +67,25 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
         if (verbose) {
             if (multi_layer) {
                 msg <- paste0(
-                    "▶️ [run_v5_test] Assay '", a, "' has fragmented layers: ",
+                    get_icon("step"),
+                    "[run_v5_test] Assay '", a, "' has fragmented layers: ",
                     paste(split_layer_names, collapse = ", ")
                 )
                 message(msg)
                 message(paste0(
-                    "❕ [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
+                    get_icon("info"),
+                    "[run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
                 ))
             } else if (is_assay5) {
                 message(paste0(
-                    "✅ [run_v5_test] Assay '", a, "' is Assay5 with standard layers (Clean)."
+                    get_icon("completed"),
+                    "[run_v5_test] Assay '", a, "' is Assay5 with standard layers (Clean)."
                 ))
             } else {
-                message(paste0("❕ [run_v5_test] Assay '", a, "' is not Assay5 (Legacy/v3)."))
+                message(paste0(
+                    get_icon("info"),
+                    "[run_v5_test] Assay '", a, "' is not Assay5 (Legacy/v3)."
+                ))
             }
         }
 
@@ -87,7 +93,7 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
 
         # 合并 Layers (仅对 Assay5 且确有多层)
         if (join_layers && multi_layer && is_assay5) {
-            if (verbose) message(paste0("▶️ [run_v5_test] Joining layers for assay '", a, "'..."))
+            if (verbose) message(paste0(get_icon("step"), "[run_v5_test] Joining layers for assay '", a, "'..."))
             old_default <- tryCatch(Seurat::DefaultAssay(obj), error = function(e) NULL)
             on.exit(
                 {
@@ -117,7 +123,8 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                             },
                             error = function(e2) {
                                 warning(paste0(
-                                    "⚠️ [run_v5_test] Failed to join layers for assay '", a, "': ",
+                                    get_icon("warning"),
+                                    "[run_v5_test] Failed to join layers for assay '", a, "': ",
                                     conditionMessage(e2)
                                 ), call. = FALSE)
                                 obj
@@ -125,7 +132,8 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                         )
                     } else {
                         warning(paste0(
-                            "⚠️ [run_v5_test] JoinLayers not exported by Seurat; skipped fallback. Original error: ",
+                            get_icon("warning"),
+                            "[run_v5_test] JoinLayers not exported by Seurat; skipped fallback. Original error: ",
                             conditionMessage(e1)
                         ), call. = FALSE)
                         obj
@@ -143,18 +151,19 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
 
             if (verbose) {
                 if (length(split_remaining) == 0) {
-                    message(paste0("✅ [run_v5_test] Layers joined successfully for assay '", a, "'."))
+                    message(paste0(get_icon("completed"), "[run_v5_test] Layers joined successfully for assay '", a, "'."))
                 } else {
                     message(paste0(
-                        "⚠️ [run_v5_test] Layers still fragmented for assay '", a, "': ",
+                        get_icon("warning"),
+                        "[run_v5_test] Layers still fragmented for assay '", a, "': ",
                         paste(split_remaining, collapse = ", ")
                     ))
                 }
             }
         } else if (join_layers && !is_assay5 && verbose) {
-            message(paste0("❕ [run_v5_test] Assay '", a, "' is not Assay5; skipping join."))
+            message(paste0(get_icon("info"), "[run_v5_test] Assay '", a, "' is not Assay5; skipping join."))
         } else if (join_layers && !multi_layer && verbose) {
-            message(paste0("❕ [run_v5_test] No fragmented layers to join for assay '", a, "."))
+            message(paste0(get_icon("info"), "[run_v5_test] No fragmented layers to join for assay '", a, "."))
         }
     }
 
