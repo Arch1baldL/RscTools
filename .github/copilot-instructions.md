@@ -24,6 +24,7 @@ Purpose: Help AI agents work productively in this small R package for single-cel
 ### Language Conventions
 - Roxygen docs and user-facing documentation (README, man pages, vignettes): English.
 - User-facing messages and errors: English.
+- Warning prefix style: start all warnings with "⚠️ [function_name]" (UTF-8). Keep the rest of the message concise and actionable.
 - Inline code comments for developers: Chinese, concise and practical.
 - Keep function/argument names and public APIs in English.
 
