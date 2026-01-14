@@ -4,7 +4,12 @@
 \alias{run_cc_regression}
 \title{Cell Cycle Scoring and SCTransform Regression}
 \usage{
-run_cc_regression(obj, species = "mouse")
+run_cc_regression(
+  obj,
+  species = "mouse",
+  force_normalize = FALSE,
+  backup_data = TRUE
+)
 }
 \arguments{
 \item{obj}{A Seurat object.}
