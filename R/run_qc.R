@@ -63,7 +63,7 @@ run_qc <- function(object_list,
     # --- 3. 定义内部处理函数 ---
     .process_single <- function(sobj, name) {
         tmp_group <- "all"
-        message(paste0(">>> Processing: ", name, " [Species: ", species_lower, "]"))
+        message(paste0("▶️ [run_qc] Processing: ", name, " [Species: ", species_lower, "]"))
 
         # v5 层检测：若检测到 RNA assay 为 v5 多层，提示优先合并
         if (exists("run_v5_test")) {
@@ -133,7 +133,7 @@ run_qc <- function(object_list,
             sobj_filtered[["all"]] <- NULL
         }
 
-        message(paste0(">>> Finished: ", name, " (Cells: ", ncol(sobj_filtered), ")\n"))
+        message(paste0("✅ [run_qc] Finished: ", name, " (Cells: ", ncol(sobj_filtered), ")"))
         return(sobj_filtered)
     }
 

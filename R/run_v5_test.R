@@ -64,15 +64,15 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
         if (verbose) {
             if (multi_layer || is_assay5) {
                 msg <- paste0(
-                    ">>> [run_v5_test] Assay '", a, "' appears to have multiple layers (Seurat v5): ",
+                    "▶️ [run_v5_test] Assay '", a, "' appears to have multiple layers (Seurat v5): ",
                     paste(layer_names, collapse = ", ")
                 )
                 message(msg)
                 message(paste0(
-                    ">>> [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
+                    "ℹ️ [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
                 ))
             } else {
-                message(paste0(">>> [run_v5_test] Assay '", a, "' does not show multiple layers."))
+                message(paste0("ℹ️ [run_v5_test] Assay '", a, "' does not show multiple layers."))
             }
         }
 
@@ -80,7 +80,7 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
 
         # 自动合并层（若需要）
         if (join_layers && (multi_layer || is_assay5)) {
-            if (verbose) message(paste0(">>> [run_v5_test] Joining layers for assay '", a, "'..."))
+            if (verbose) message(paste0("▶️ [run_v5_test] Joining layers for assay '", a, "'..."))
             obj <- tryCatch(
                 {
                     SeuratObject::JoinLayers(obj, assays = a)
@@ -93,9 +93,9 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                         },
                         error = function(e2) {
                             warning(paste0(
-                                ">>> [run_v5_test] Failed to join layers for assay '", a, "': ",
+                                "⚠️ [run_v5_test] Failed to join layers for assay '", a, "': ",
                                 conditionMessage(e2)
-                            ))
+                            ), call. = FALSE)
                             obj
                         }
                     )
@@ -105,9 +105,9 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
             layer_names_after <- tryCatch(SeuratObject::LayerNames(obj[[a]]), error = function(e) NULL)
             if (verbose) {
                 if (is.null(layer_names_after) || length(layer_names_after) == 0) {
-                    message(paste0(">>> [run_v5_test] Layers joined for assay '", a, "'."))
+                    message(paste0("✅ [run_v5_test] Layers joined for assay '", a, "'."))
                 } else {
-                    message(paste0(">>> [run_v5_test] Layers still present for assay '", a, "'."))
+                    message(paste0("⚠️ [run_v5_test] Layers still present for assay '", a, "'."))
                 }
             }
         }

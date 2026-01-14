@@ -34,23 +34,21 @@
 #'   min_cells = 20
 #' )
 #' }
-
 plot_umap_border <- function(
-    obj,
-    group_points,
-    group_borders,
-    reduction = "umap",
-    min_cells = 10,
-    expand_ratio = 0.3,
-    pt_size = 0.5,
-    line_width = 1.2,
-    label_size = 5
+  obj,
+  group_points,
+  group_borders,
+  reduction = "umap",
+  min_cells = 10,
+  expand_ratio = 0.3,
+  pt_size = 0.5,
+  line_width = 1.2,
+  label_size = 5
 ) {
-
   # 1. 校验与坐标提取
   # 检查 reduction 是否存在
   if (!reduction %in% names(obj@reductions)) {
-    stop(paste0("Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")))
+    stop(paste0("❌ [plot_umap_border] Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")), call. = FALSE)
   }
 
   # 动态获取坐标列名（如 "umap_1"、"UMAP_1"、"PC_1"）
@@ -68,7 +66,7 @@ plot_umap_border <- function(
   valid_groups <- names(group_counts[group_counts >= min_cells])
 
   if (length(valid_groups) == 0) {
-    stop("All groups have fewer cells than 'min_cells'. Cannot draw borders.")
+    stop("❌ [plot_umap_border] All groups have fewer cells than 'min_cells'. Cannot draw borders.", call. = FALSE)
   }
 
   umap_data_for_contour <- umap_data %>%
@@ -85,8 +83,8 @@ plot_umap_border <- function(
       span_y <- diff(range_y) * expand_ratio
 
       ghost_points <- data.frame(
-        UMAP_1 = c(range_x[1]-span_x, range_x[2]+span_x, range_x[1]-span_x, range_x[2]+span_x),
-        UMAP_2 = c(range_y[1]-span_y, range_y[2]+span_y, range_y[2]+span_y, range_y[1]-span_y),
+        UMAP_1 = c(range_x[1] - span_x, range_x[2] + span_x, range_x[1] - span_x, range_x[2] + span_x),
+        UMAP_2 = c(range_y[1] - span_y, range_y[2] + span_y, range_y[2] + span_y, range_y[1] - span_y),
         group_for_points = NA
       )
       # dplyr::bind_rows 会利用分组上下文自动补齐缺失的分组列
@@ -125,22 +123,30 @@ plot_umap_border <- function(
 
     # C. 箭头坐标轴
     # X 轴
-    ggplot2::annotate("segment", x = origin_x, xend = origin_x + arrow_len,
-             y = origin_y, yend = origin_y,
-             arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
-             size = 1, color = "black") +
-    ggplot2::annotate("text", x = origin_x + (arrow_len * 0.05), y = origin_y - label_gap,
-             label = "UMAP_1", hjust = 0, vjust = 1,
-             size = label_size, fontface = "bold") +
+    ggplot2::annotate("segment",
+      x = origin_x, xend = origin_x + arrow_len,
+      y = origin_y, yend = origin_y,
+      arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
+      size = 1, color = "black"
+    ) +
+    ggplot2::annotate("text",
+      x = origin_x + (arrow_len * 0.05), y = origin_y - label_gap,
+      label = "UMAP_1", hjust = 0, vjust = 1,
+      size = label_size, fontface = "bold"
+    ) +
 
     # Y 轴
-    ggplot2::annotate("segment", x = origin_x, xend = origin_x,
-             y = origin_y, yend = origin_y + arrow_len,
-             arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
-             size = 1, color = "black") +
-    ggplot2::annotate("text", x = origin_x - label_gap, y = origin_y + (arrow_len * 0.05),
-             label = "UMAP_2", hjust = 0, vjust = 0, angle = 90,
-             size = label_size, fontface = "bold") +
+    ggplot2::annotate("segment",
+      x = origin_x, xend = origin_x,
+      y = origin_y, yend = origin_y + arrow_len,
+      arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
+      size = 1, color = "black"
+    ) +
+    ggplot2::annotate("text",
+      x = origin_x - label_gap, y = origin_y + (arrow_len * 0.05),
+      label = "UMAP_2", hjust = 0, vjust = 0, angle = 90,
+      size = label_size, fontface = "bold"
+    ) +
 
     # D. 版式
     ggplot2::theme_void() +

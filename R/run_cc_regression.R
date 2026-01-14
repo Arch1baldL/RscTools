@@ -22,19 +22,19 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
     # 将人类基因符号转为鼠类 Title Case（如 MKI67 -> Mki67）
     s_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$s.genes)
     g2m_genes <- stringr::str_to_title(Seurat::cc.genes.updated.2019$g2m.genes)
-    message(paste0(">>> [run_cc_regression] Processing with mouse gene symbols."))
+    message(paste0("▶️ [run_cc_regression] Processing with mouse gene symbols."))
 
     # 物种：human
   } else if (species_lower == "human") {
     # 使用默认的人类全大写基因列表
     s_genes <- Seurat::cc.genes.updated.2019$s.genes
     g2m_genes <- Seurat::cc.genes.updated.2019$g2m.genes
-    message(paste0(">>> [run_cc_regression] Processing with human gene symbols."))
+    message(paste0("▶️ [run_cc_regression] Processing with human gene symbols."))
 
     # 不支持的物种
   } else {
     # 直接停止
-    stop(paste0("Error: Unsupported species '", species, "'."))
+    stop(paste0("❌ [run_cc_regression] Unsupported species '", species, "'."), call. = FALSE)
   }
 
   # --- 2. 验证基因重叠 ---
@@ -48,7 +48,7 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
       "Please check if rownames(obj) are Gene Symbols (e.g., Mki67) or Ensembl IDs."
     )
   } else {
-    message(paste0(">>> Found ", length(check_overlap), " cell cycle genes. Proceeding to scoring..."))
+    message(paste0("▶️ [run_cc_regression] Found ", length(check_overlap), " cell cycle genes. Proceeding to scoring..."))
   }
 
   # --- 3. 细胞周期计分 ---
@@ -110,7 +110,7 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
         rna_m <- as.matrix(rna_layer[common_genes, , drop = FALSE])
         counts_m <- as.matrix(counts_layer[common_genes, , drop = FALSE])
         if (ncol(rna_m) != ncol(counts_m)) {
-          message(">>> [run_cc_regression] Unable to align 'RNA' data and counts by cell names; will normalize.")
+          message("⚠️ [run_cc_regression] Unable to align 'RNA' data and counts by cell names; will normalize.")
           rna_m <- counts_m <- NULL
         }
       }
@@ -141,15 +141,15 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
   }
 
   if (needs_norm) {
-    message(">>> [run_cc_regression] RNA 'data' layer not found or not normalized. Normalizing now...")
+    message("▶️ [run_cc_regression] RNA 'data' layer not found or not normalized. Normalizing now...")
     if (!is.null(rna_layer)) {
-      message(">>> [run_cc_regression] Existing RNA 'data' layer will be overwritten by NormalizeData().")
+      message("⚠️ [run_cc_regression] Existing RNA 'data' layer will be overwritten by NormalizeData().")
     }
     obj <- Seurat::NormalizeData(obj, assay = "RNA", verbose = FALSE)
     # 重新获取层数据以保证同步
     rna_layer <- tryCatch(Seurat::GetAssayData(obj, assay = "RNA", slot = "data"), error = function(e) NULL)
   } else {
-    message(">>> [run_cc_regression] RNA 'data' layer appears normalized; skipping NormalizeData().")
+    message("ℹ️ [run_cc_regression] RNA 'data' layer appears normalized; skipping NormalizeData().")
   }
 
   obj <- Seurat::CellCycleScoring(obj,
@@ -161,7 +161,7 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
 
   # --- 4. SCTransform 回归 ---
   # 回归掉已计算的评分
-  message(">>> Running SCTransform to regress out S.Score and G2M.Score...")
+  message("▶️ [run_cc_regression] Running SCTransform to regress out S.Score and G2M.Score...")
 
   obj <- Seurat::SCTransform(obj,
     vars.to.regress = c("S.Score", "G2M.Score"),
@@ -169,8 +169,7 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
     verbose = FALSE
   )
 
-  message(">>> Finished: Cell cycle has been regressed out based on SCT.
-")
+  message("✅ [run_cc_regression] Finished: Cell cycle has been regressed out based on SCT.")
 
   return(obj)
 }
