@@ -72,14 +72,14 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                 )
                 message(msg)
                 message(paste0(
-                    "ℹ️ [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
+                    "❕ [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
                 ))
             } else if (is_assay5) {
                 message(paste0(
                     "✅ [run_v5_test] Assay '", a, "' is Assay5 with standard layers (Clean)."
                 ))
             } else {
-                message(paste0("ℹ️ [run_v5_test] Assay '", a, "' is not Assay5 (Legacy/v3)."))
+                message(paste0("❕ [run_v5_test] Assay '", a, "' is not Assay5 (Legacy/v3)."))
             }
         }
 
@@ -152,9 +152,9 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                 }
             }
         } else if (join_layers && !is_assay5 && verbose) {
-            message(paste0("ℹ️ [run_v5_test] Assay '", a, "' is not Assay5; skipping join."))
+            message(paste0("❕ [run_v5_test] Assay '", a, "' is not Assay5; skipping join."))
         } else if (join_layers && !multi_layer && verbose) {
-            message(paste0("ℹ️ [run_v5_test] No fragmented layers to join for assay '", a, "."))
+            message(paste0("❕ [run_v5_test] No fragmented layers to join for assay '", a, "."))
         }
     }
 

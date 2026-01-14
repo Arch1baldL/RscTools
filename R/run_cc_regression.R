@@ -149,7 +149,7 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
     # 重新获取层数据以保证同步
     rna_layer <- tryCatch(Seurat::GetAssayData(obj, assay = "RNA", slot = "data"), error = function(e) NULL)
   } else {
-    message("ℹ️ [run_cc_regression] RNA 'data' layer appears normalized; skipping NormalizeData().")
+    message("❕ [run_cc_regression] RNA 'data' layer appears normalized; skipping NormalizeData().")
   }
 
   obj <- Seurat::CellCycleScoring(obj,

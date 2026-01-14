@@ -28,6 +28,7 @@ Purpose: Help AI agents work productively in this small R package for single-cel
  - Emoji prefixes for consistency (UTF-8):
    - Running: "▶️ [function_name]"
    - Completed: "✅ [function_name]"
+  - Info: "❕ [function_name]"
    - Warning: "⚠️ [function_name]"
    - Error: "❌ [function_name]"
 - Inline code comments for developers: Chinese, concise and practical.
