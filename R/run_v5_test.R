@@ -43,7 +43,7 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
         layer_names <- NULL
         multi_layer <- FALSE
 
-        # 检测 Assay5（尽量稳健）
+        # 检测 Assay5
         is_assay5 <- tryCatch(
             {
                 inherits(obj[[a]], "Assay5")
@@ -51,47 +51,65 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
             error = function(e) FALSE
         )
 
-        # 获取层名称（Assay5 才有）
+        # 获取层名称（优先 LayerNames，兼容缺失导出时的 Layers）
         layer_names <- tryCatch(
-            {
-                SeuratObject::LayerNames(obj[[a]])
-            },
-            error = function(e) NULL
+            SeuratObject::LayerNames(obj[[a]]),
+            error = function(e1) {
+                tryCatch(SeuratObject::Layers(obj[[a]]), error = function(e2) NULL)
+            }
         )
 
-        multi_layer <- !is.null(layer_names) && length(layer_names) > 0
+        # 白名单：标准层不视为切分层
+        standard_layers <- c("counts", "data", "scale.data")
+        split_layer_names <- setdiff(layer_names, standard_layers)
+        multi_layer <- length(split_layer_names) > 0
 
         if (verbose) {
             if (multi_layer) {
                 msg <- paste0(
-                    "▶️ [run_v5_test] Assay '", a, "' appears to have multiple layers (Seurat v5): ",
-                    paste(layer_names, collapse = ", ")
+                    "▶️ [run_v5_test] Assay '", a, "' has fragmented layers: ",
+                    paste(split_layer_names, collapse = ", ")
                 )
                 message(msg)
                 message(paste0(
                     "ℹ️ [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
                 ))
             } else if (is_assay5) {
-                message(paste0("ℹ️ [run_v5_test] Assay '", a, "' is Assay5 with no extra layers; nothing to join."))
+                message(paste0(
+                    "✅ [run_v5_test] Assay '", a, "' is Assay5 with standard layers (Clean)."
+                ))
             } else {
-                message(paste0("ℹ️ [run_v5_test] Assay '", a, "' does not show multiple layers."))
+                message(paste0("ℹ️ [run_v5_test] Assay '", a, "' is not Assay5 (Legacy/v3)."))
             }
         }
 
         results[[a]] <- list(is_assay5 = is_assay5, multi_layer = multi_layer, layers = layer_names)
 
-        # 自动合并层（若需要）
-        if (join_layers && multi_layer) {
+        # 合并 Layers (仅对 Assay5 且确有多层)
+        if (join_layers && multi_layer && is_assay5) {
             if (verbose) message(paste0("▶️ [run_v5_test] Joining layers for assay '", a, "'..."))
+            old_default <- tryCatch(Seurat::DefaultAssay(obj), error = function(e) NULL)
+            on.exit(
+                {
+                    if (!is.null(old_default)) {
+                        Seurat::DefaultAssay(obj) <- old_default
+                    }
+                },
+                add = TRUE
+            )
+            Seurat::DefaultAssay(obj) <- a
             obj <- tryCatch(
                 {
                     SeuratObject::JoinLayers(obj, assays = a)
                 },
                 error = function(e1) {
                     # 若 Seurat 未导出 JoinLayers，则跳过 fallback 并提示
-                    has_export <- tryCatch({
-                        "JoinLayers" %in% getNamespaceExports("Seurat")
-                    }, error = function(e) FALSE)
+                    has_export <- tryCatch(
+                        {
+                            "JoinLayers" %in% getNamespaceExports("Seurat")
+                        },
+                        error = function(e) FALSE
+                    )
                     if (isTRUE(has_export)) {
                         tryCatch(
                             {
@@ -114,17 +132,29 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                     }
                 }
             )
-            # 简易验证：再次检查层是否已清空
-            layer_names_after <- tryCatch(SeuratObject::LayerNames(obj[[a]]), error = function(e) NULL)
+            # 再检层
+            layer_names_after <- tryCatch(
+                SeuratObject::LayerNames(obj[[a]]),
+                error = function(e1) {
+                    tryCatch(SeuratObject::Layers(obj[[a]]), error = function(e2) NULL)
+                }
+            )
+            split_remaining <- setdiff(layer_names_after, standard_layers)
+
             if (verbose) {
-                if (is.null(layer_names_after) || length(layer_names_after) == 0) {
-                    message(paste0("✅ [run_v5_test] Layers joined for assay '", a, "'."))
+                if (length(split_remaining) == 0) {
+                    message(paste0("✅ [run_v5_test] Layers joined successfully for assay '", a, "'."))
                 } else {
-                    message(paste0("⚠️ [run_v5_test] Layers still present for assay '", a, "'."))
+                    message(paste0(
+                        "⚠️ [run_v5_test] Layers still fragmented for assay '", a, "': ",
+                        paste(split_remaining, collapse = ", ")
+                    ))
                 }
             }
+        } else if (join_layers && !is_assay5 && verbose) {
+            message(paste0("ℹ️ [run_v5_test] Assay '", a, "' is not Assay5; skipping join."))
         } else if (join_layers && !multi_layer && verbose) {
-            message(paste0("ℹ️ [run_v5_test] No layers to join for assay '", a, "'."))
+            message(paste0("ℹ️ [run_v5_test] No fragmented layers to join for assay '", a, "."))
         }
     }
 
