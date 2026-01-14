@@ -8,6 +8,7 @@
 #' @param obj A Seurat object containing UMAP coordinates.
 #' @param group_points String. The metadata column name to use for coloring scatter points (e.g., "cell_cluster").
 #' @param group_borders String. The metadata column name to use for drawing borders (e.g., "cell_sub_type").
+#'   If NULL, defaults to `group_points`.
 #' @param reduction String. The dimensional reduction to use (default is "umap").
 #' @param min_cells Integer. Minimum number of cells required in a group to draw a border. Groups with fewer cells will only show scatter points. Default is 10.
 #' @param expand_ratio Numeric. The ratio to expand the bounding box for density calculation to avoid clipping. Default is 0.3 (30%).
@@ -37,7 +38,7 @@
 plot_umap_border <- function(
   obj,
   group_points,
-  group_borders,
+  group_borders = NULL,
   reduction = "umap",
   min_cells = 10,
   expand_ratio = 0.3,
@@ -45,6 +46,9 @@ plot_umap_border <- function(
   line_width = 1.2,
   label_size = 5
 ) {
+  if (is.null(group_borders)) {
+    group_borders <- group_points
+  }
   # 1. 校验与坐标提取
   # 检查 reduction 是否存在
   if (!reduction %in% names(obj@reductions)) {
