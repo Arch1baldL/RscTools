@@ -7,19 +7,19 @@
 plot_pca_variance(obj, reduction = "pca", max_pcs = 50)
 }
 \arguments{
-\item{obj}{A Seurat object. Must have PCA reduction computed.}
+\item{obj}{A Seurat object. Must have the PCA reduction computed.}
 
 \item{reduction}{Character. Name of the reduction to use. Default is "pca".}
 
-\item{max_pcs}{Integer. Maximum number of PCs to plot. Default is 50.}
+\item{max_pcs}{Integer. Maximum number of PCs to display. Default is 50.}
 }
 \value{
 A ggplot2 object.
 }
 \description{
-This function visualizes the cumulative explained variance of Principal Components (PCA).
-It helps in determining the optimal number of PCs to retain for downstream analysis
-by marking the 90\% and 95\% variance thresholds.
+Visualize the cumulative explained variance of principal components (PCA)
+and annotate the 90\% and 95\% thresholds to help decide the number of PCs
+to retain for downstream analysis.
 }
 \examples{
 \dontrun{
