@@ -59,12 +59,12 @@ run_cc_regression <- function(obj, species = "mouse", force_normalize = FALSE, b
   if (exists("run_v5_test")) {
     v5_res <- tryCatch(run_v5_test(obj, assays = "RNA", join_layers = FALSE, verbose = TRUE), error = function(e) NULL)
     if (!is.null(v5_res) && is.list(v5_res) && !is.null(v5_res[["RNA"]])) {
-      has_v5 <- isTRUE(v5_res[["RNA"]]$is_assay5) || isTRUE(v5_res[["RNA"]]$multi_layer)
-      if (has_v5) {
+      has_v5_layers <- isTRUE(v5_res[["RNA"]]$multi_layer)
+      if (has_v5_layers) {
         stop(
           paste0(
-            "⚠️ [run_cc_regression] Detected Seurat v5 multi-layer in RNA assay.\n",
-            "Please run: \"run_v5_test()\" first!\n"
+            "❌ [run_cc_regression] Detected Seurat v5 multi-layer in RNA assay.\n",
+            "Please run: run_v5_test(obj, assays = 'RNA', join_layers = TRUE) first, then retry.\n"
           ),
           call. = FALSE
         )

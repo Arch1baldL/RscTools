@@ -62,7 +62,7 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
         multi_layer <- !is.null(layer_names) && length(layer_names) > 0
 
         if (verbose) {
-            if (multi_layer || is_assay5) {
+            if (multi_layer) {
                 msg <- paste0(
                     "▶️ [run_v5_test] Assay '", a, "' appears to have multiple layers (Seurat v5): ",
                     paste(layer_names, collapse = ", ")
@@ -71,6 +71,8 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                 message(paste0(
                     "ℹ️ [run_v5_test] Consider joining layers: JoinLayers(obj, assays = '", a, "')"
                 ))
+            } else if (is_assay5) {
+                message(paste0("ℹ️ [run_v5_test] Assay '", a, "' is Assay5 with no extra layers; nothing to join."))
             } else {
                 message(paste0("ℹ️ [run_v5_test] Assay '", a, "' does not show multiple layers."))
             }
@@ -79,26 +81,37 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
         results[[a]] <- list(is_assay5 = is_assay5, multi_layer = multi_layer, layers = layer_names)
 
         # 自动合并层（若需要）
-        if (join_layers && (multi_layer || is_assay5)) {
+        if (join_layers && multi_layer) {
             if (verbose) message(paste0("▶️ [run_v5_test] Joining layers for assay '", a, "'..."))
             obj <- tryCatch(
                 {
                     SeuratObject::JoinLayers(obj, assays = a)
                 },
                 error = function(e1) {
-                    # 部分环境 JoinLayers 入口在 Seurat 命名空间
-                    tryCatch(
-                        {
-                            Seurat::JoinLayers(obj, assays = a)
-                        },
-                        error = function(e2) {
-                            warning(paste0(
-                                "⚠️ [run_v5_test] Failed to join layers for assay '", a, "': ",
-                                conditionMessage(e2)
-                            ), call. = FALSE)
-                            obj
-                        }
-                    )
+                    # 若 Seurat 未导出 JoinLayers，则跳过 fallback 并提示
+                    has_export <- tryCatch({
+                        "JoinLayers" %in% getNamespaceExports("Seurat")
+                    }, error = function(e) FALSE)
+                    if (isTRUE(has_export)) {
+                        tryCatch(
+                            {
+                                Seurat::JoinLayers(obj, assays = a)
+                            },
+                            error = function(e2) {
+                                warning(paste0(
+                                    "⚠️ [run_v5_test] Failed to join layers for assay '", a, "': ",
+                                    conditionMessage(e2)
+                                ), call. = FALSE)
+                                obj
+                            }
+                        )
+                    } else {
+                        warning(paste0(
+                            "⚠️ [run_v5_test] JoinLayers not exported by Seurat; skipped fallback. Original error: ",
+                            conditionMessage(e1)
+                        ), call. = FALSE)
+                        obj
+                    }
                 }
             )
             # 简易验证：再次检查层是否已清空
@@ -110,6 +123,8 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
                     message(paste0("⚠️ [run_v5_test] Layers still present for assay '", a, "'."))
                 }
             }
+        } else if (join_layers && !multi_layer && verbose) {
+            message(paste0("ℹ️ [run_v5_test] No layers to join for assay '", a, "'."))
         }
     }
 
