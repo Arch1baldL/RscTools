@@ -13,7 +13,8 @@ plot_umap_border(
   expand_ratio = 0.3,
   pt_size = 0.5,
   line_width = 1.2,
-  label_size = 5
+  label_size = 5,
+  border_breaks = 0.15
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ If NULL, defaults to \code{group_points}.}
 \item{line_width}{Numeric. Width of the border lines. Default is 1.2.}
 
 \item{label_size}{Numeric. Font size for UMAP axis labels. Default is 5.}
+
+\item{border_breaks}{Numeric. Density threshold for drawing borders (passed to stat_density_2d breaks). Default is 0.15.}
 }
 \value{
 A ggplot object.
@@ -44,15 +47,4 @@ This function visualizes single-cell UMAP embeddings with scatter points and
 draws density borders around specified cell groups. It automatically handles
 UMAP axes with arrows and expands the plotting area to prevent border clipping.
 It auto-detects coordinate names based on the provided reduction.
-}
-\examples{
-\dontrun{
-# Assuming you have a Seurat object named 'seurat_obj'
-plot_umap_border(
-  obj = seurat_obj,
-  group_points = "seurat_clusters",
-  group_borders = "cell_type",
-  min_cells = 20
-)
-}
 }

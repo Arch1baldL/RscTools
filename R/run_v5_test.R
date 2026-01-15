@@ -25,7 +25,7 @@
 #'
 #' @export
 #' @importFrom Seurat Assays DefaultAssay GetAssayData
-#' @importFrom SeuratObject LayerNames JoinLayers
+#' @importFrom SeuratObject JoinLayers
 
 run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE) {
     # --- 参数与 assay 选择 ---
@@ -53,7 +53,7 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
 
         # 获取层名称（优先 LayerNames，兼容缺失导出时的 Layers）
         layer_names <- tryCatch(
-            SeuratObject::LayerNames(obj[[a]]),
+            SeuratObject:::LayerNames(obj[[a]]),
             error = function(e1) {
                 tryCatch(SeuratObject::Layers(obj[[a]]), error = function(e2) NULL)
             }
@@ -142,7 +142,7 @@ run_v5_test <- function(obj, assays = NULL, join_layers = FALSE, verbose = TRUE)
             )
             # 再检层
             layer_names_after <- tryCatch(
-                SeuratObject::LayerNames(obj[[a]]),
+                SeuratObject:::LayerNames(obj[[a]]),
                 error = function(e1) {
                     tryCatch(SeuratObject::Layers(obj[[a]]), error = function(e2) NULL)
                 }

@@ -21,8 +21,3 @@ Visualize the cumulative explained variance of principal components (PCA)
 and annotate the 90\% and 95\% thresholds to help decide the number of PCs
 to retain for downstream analysis.
 }
-\examples{
-\dontrun{
-plot_pca_variance(seurat_obj)
-}
-}

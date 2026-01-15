@@ -6,7 +6,7 @@
 #' @param obj A Seurat object.
 #' @param species Character string. Supports "mouse" (default) and "human"; mouse genes are Title Case.
 #'
-#' @importFrom Seurat cc.genes.updated.2019 CellCycleScoring SCTransform DefaultAssay NormalizeData
+#' @importFrom Seurat CellCycleScoring SCTransform DefaultAssay NormalizeData
 #' @importFrom stringr str_to_title
 #'
 #' @return A Seurat object with a new 'SCT' assay containing regressed data.

@@ -12,7 +12,7 @@
 #' If TRUE (default), all genes are scaled (compute-intensive). If FALSE, only variable features are scaled.
 #' @param plot_qc Logical. Whether to print QC violin plots before and after filtering. Default is TRUE.
 #'
-#' @importFrom Seurat PercentageFeatureSet VlnPlot subset NormalizeData FindVariableFeatures ScaleData
+#' @importFrom Seurat PercentageFeatureSet VlnPlot NormalizeData FindVariableFeatures ScaleData
 #' @importFrom patchwork plot_annotation
 #' @importFrom stats setNames
 #'
@@ -104,7 +104,7 @@ run_qc <- function(object_list,
         }
 
         # 过滤细胞（Subset）
-        sobj_filtered <- subset(sobj, subset = nFeature_RNA < max_nFeature_RNA & percent.mt < max_percent_mt)
+        sobj_filtered <- Seurat::subset(sobj, subset = nFeature_RNA < max_nFeature_RNA & percent.mt < max_percent_mt)
 
         # 过滤后绘图
         if (plot_qc) {
