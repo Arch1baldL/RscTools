@@ -15,6 +15,7 @@
 #' @param pt_size Numeric. Size of the scatter points. Default is 0.5.
 #' @param line_width Numeric. Width of the border lines. Default is 1.2.
 #' @param label_size Numeric. Font size for UMAP axis labels. Default is 5.
+#' @param border_breaks Numeric. Density threshold for drawing borders (passed to stat_density_2d breaks). Default is 0.15.
 #'
 #' @return A ggplot object.
 #' @export
@@ -34,7 +35,8 @@ plot_umap_border <- function(
   expand_ratio = 0.3,
   pt_size = 0.5,
   line_width = 1.2,
-  label_size = 5
+  label_size = 5,
+  border_breaks = 0.1
 ) {
   if (is.null(group_borders)) {
     group_borders <- group_points
@@ -109,7 +111,7 @@ plot_umap_border <- function(
       ggplot2::aes(fill = .data$group_for_hulls, color = .data$group_for_hulls),
       geom = "polygon",
       contour_var = "ndensity",
-      breaks = 0.2,
+      breaks = border_breaks,
       size = line_width,
       alpha = 0.2,
       show.legend = FALSE
