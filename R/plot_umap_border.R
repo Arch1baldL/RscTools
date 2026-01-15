@@ -24,17 +24,7 @@
 #' @importFrom dplyr filter group_by group_modify ungroup bind_rows %>%
 #' @importFrom grid arrow unit
 #' @importFrom rlang .data
-#'
-#' @examples
-#' \dontrun{
-#' # Assuming you have a Seurat object named 'seurat_obj'
-#' plot_umap_border(
-#'   obj = seurat_obj,
-#'   group_points = "seurat_clusters",
-#'   group_borders = "cell_type",
-#'   min_cells = 20
-#' )
-#' }
+
 plot_umap_border <- function(
   obj,
   group_points,

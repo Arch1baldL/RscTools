@@ -16,11 +16,7 @@
 #' @importFrom tibble enframe
 #' @importFrom scales percent
 #' @importFrom magrittr %>%
-#'
-#' @examples
-#' \dontrun{
-#' plot_pca_variance(seurat_obj)
-#' }
+
 plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
   # 1. 检查指定的 PCA 降维是否存在
   if (!reduction %in% names(obj@reductions)) {
