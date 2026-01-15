@@ -24,4 +24,5 @@ Imports:
     stringr,
     tibble
 Suggests: 
-    glmGamPoi
+    glmGamPoi,
+    CellChat
