@@ -18,6 +18,7 @@
 #' @importFrom magrittr %>%
 
 plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
+  message(paste0(get_icon("step"), "[plot_pca_variance] Plotting..."))
   # 1. 检查指定的 PCA 降维是否存在
   if (!reduction %in% names(obj@reductions)) {
     stop(paste0(get_icon("error"), "[plot_pca_variance] Reduction '", reduction, "' not found in the Seurat object. Please run RunPCA first."), call. = FALSE)
@@ -83,5 +84,6 @@ plot_pca_variance <- function(obj, reduction = "pca", max_pcs = 50) {
       )
   }
 
+  message(paste0(get_icon("completed"), "[plot_pca_variance] Completed."))
   return(p)
 }

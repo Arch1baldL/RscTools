@@ -38,6 +38,7 @@ plot_umap_border <- function(
   label_size = 5,
   border_breaks = 0.1
 ) {
+  message(paste0(get_icon("step"), "[plot_umap_border] Plotting..."))
   if (is.null(group_borders)) {
     group_borders <- group_points
   }
@@ -150,5 +151,6 @@ plot_umap_border <- function(
     ggplot2::coord_fixed(clip = "off") +
     ggplot2::scale_color_discrete(name = "Group")
 
+  message(paste0(get_icon("completed"), "[plot_umap_border] Completed."))
   return(p)
 }

@@ -14,7 +14,7 @@ plot_umap_border(
   pt_size = 0.5,
   line_width = 1.2,
   label_size = 5,
-  border_breaks = 0.15
+  border_breaks = 0.1
 )
 }
 \arguments{

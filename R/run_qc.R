@@ -25,6 +25,7 @@ run_qc <- function(object_list,
                    max_percent_mt = 3,
                    scale_all_genes = TRUE,
                    plot_qc = TRUE) {
+    message(paste0(get_icon("step"), "[run_qc] Running..."))
     input_was_single <- FALSE
     # --- 1. 物种检测与匹配规则 ---
     species_lower <- tolower(species)
@@ -155,8 +156,10 @@ run_qc <- function(object_list,
     names(processed_list) <- names(object_list)[keep_idx]
 
     if (input_was_single) {
+        message(paste0(get_icon("completed"), "[run_qc] Completed."))
         return(processed_list[[1]])
     }
 
+    message(paste0(get_icon("completed"), "[run_qc] Completed."))
     return(processed_list)
 }

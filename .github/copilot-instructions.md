@@ -25,14 +25,18 @@ Purpose: Help AI agents work productively in this small R package for single-cel
 - Roxygen docs and user-facing documentation (README, man pages, vignettes): English.
 - User-facing messages and errors: English.
 - Warning prefix style: start all warnings with "⚠️ [function_name]" (UTF-8). Keep the rest of the message concise and actionable.
-- Emoji prefixes for consistency (UTF-8), formatted as "<emoji> [function_name]":
-  - Step: "▶️ [function_name]"
-  - Running: "⏳ [function_name]"
-  - Completed: "✅ [function_name]"
-  - Info: "❕ [function_name]"
-  - Warning: "⚠️ [function_name]"
-  - Error: "❌ [function_name]"
-  - Use the shared helper `get_icon(type)` from R/utils_ico.R to emit icons; keep emoji first.
+  - Emoji prefixes for consistency (UTF-8), formatted as "<emoji> [function_name]":
+    - Step: "▶️ [function_name]"
+    - Running: "⏳ [function_name]"
+    - Completed: "✅ [function_name]"
+    - Info: "❕ [function_name]"
+    - Warning: "⚠️ [function_name]"
+    - Error: "❌ [function_name]"
+    - Use the shared helper `get_icon(type)` from R/utils_ico.R to emit icons; keep emoji first.
+  - For all exported functions:
+    - At the start of every `run*` function, print: `message(paste0(get_icon("step"), "[function_name] Running..."))`
+    - At the start of every `plot*` function, print: `message(paste0(get_icon("step"), "[function_name] Plotting..."))`
+    - At the end of every exported function, print: `message(paste0(get_icon("completed"), "[function_name] Completed."))` before returning.
 - Inline code comments for developers: Chinese, concise and practical.
 - Keep function/argument names and public APIs in English.
 

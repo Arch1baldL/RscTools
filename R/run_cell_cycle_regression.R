@@ -13,6 +13,7 @@
 #' @export
 
 run_cell_cycle_regression <- function(obj, species = "mouse") {
+    message(paste0(get_icon("step"), "[run_cell_cycle_regression] Running..."))
     # --- 1. 物种检测与基因列表准备 ---
     species_lower <- tolower(species)
 
@@ -85,6 +86,6 @@ run_cell_cycle_regression <- function(obj, species = "mouse") {
         verbose = FALSE
     )
 
-    message(sprintf("%s[run_cell_cycle_regression] Done.", get_icon("completed")))
+    message(paste0(get_icon("completed"), "[run_cell_cycle_regression] Completed."))
     return(obj)
 }
