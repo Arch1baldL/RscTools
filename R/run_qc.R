@@ -66,12 +66,17 @@ run_qc <- function(object_list,
         tmp_group <- "all"
         message(paste0(get_icon("step"), "[run_qc] Processing: ", name, " [Species: ", species_lower, "]"))
 
-        # v5 层检测：若检测到 RNA assay 为 v5 多层，提示优先合并
+        # v5 层检测：仅在 RNA assay 真实为多层（multi-layer）时给出提示
         if (exists("run_v5_test")) {
             v5_res <- tryCatch(run_v5_test(sobj, assays = "RNA", join_layers = FALSE, verbose = TRUE), error = function(e) NULL)
             if (!is.null(v5_res) && is.list(v5_res) && !is.null(v5_res[["RNA"]])) {
-                has_v5 <- isTRUE(v5_res[["RNA"]]$is_assay5) || isTRUE(v5_res[["RNA"]]$multi_layer)
-                if (has_v5) {
+                info_rna <- v5_res[["RNA"]]
+                is_assay5 <- isTRUE(info_rna$is_assay5)
+                multi_layer <- isTRUE(info_rna$multi_layer)
+                n_layers <- if (!is.null(info_rna$layers)) length(info_rna$layers) else NA_integer_
+                has_multi_layer <- multi_layer || (!is.na(n_layers) && n_layers > 1)
+
+                if (is_assay5 && has_multi_layer) {
                     warning(paste0(get_icon("warning"), "[run_qc] Sample '", name, "' has Seurat v5 multi-layer in RNA assay. Consider: obj <- run_v5_test(obj, assays = 'RNA', join_layers = TRUE) before QC."), call. = FALSE)
                 }
             }
@@ -104,8 +109,10 @@ run_qc <- function(object_list,
                 )
         }
 
-        # 过滤细胞（Subset）
-        sobj_filtered <- Seurat::subset(sobj, subset = nFeature_RNA < max_nFeature_RNA & percent.mt < max_percent_mt)
+        # 过滤细胞（避免 NSE 未绑定变量）
+        meta_df <- sobj[[]]
+        keep_cells <- rownames(meta_df)[meta_df$nFeature_RNA < max_nFeature_RNA & meta_df$percent.mt < max_percent_mt]
+        sobj_filtered <- subset(sobj, cells = keep_cells)
 
         # 过滤后绘图
         if (plot_qc) {
