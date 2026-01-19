@@ -1,18 +1,22 @@
-#' Cell Cycle Scoring and SCTransform Regression (Force Normalize)
+#' Cell Cycle Scoring with Optional SCTransform Regression (Force Normalize)
 #'
-#' Force-log-normalizes RNA before scoring, then regresses cell cycle via SCTransform.
-#' Safe to run even if RNA data was already normalized.
+#' Force-log-normalizes RNA before scoring cell cycle, then optionally regresses
+#' cell cycle effects via SCTransform. Safe to run even if RNA data was already normalized.
 #'
 #' @param obj A Seurat object.
 #' @param species Character string. Supports "mouse" (default) and "human"; mouse genes are Title Case.
+#' @param regression Logical. If TRUE, performs SCTransform regression of S.Score and G2M.Score after scoring.
+#' If FALSE (default), only performs RNA normalization and cell cycle scoring without regression.
 #'
 #' @importFrom Seurat CellCycleScoring SCTransform DefaultAssay NormalizeData
 #' @importFrom stringr str_to_title
 #'
-#' @return A Seurat object with a new 'SCT' assay containing regressed data.
+#' @return A Seurat object. If `regression=TRUE`, returns an object with a new 'SCT' assay containing regressed data.
+#' If `regression=FALSE` (default), returns the object after RNA normalization and cell cycle scoring only
+#' (no 'SCT' assay is created/updated).
 #' @export
 
-run_cell_cycle_regression <- function(obj, species = "mouse") {
+run_cell_cycle_regression <- function(obj, species = "mouse", regression = TRUE) {
     message(paste0(get_icon("step"), "[run_cell_cycle_regression] Running..."))
     # --- 1. 物种检测与基因列表准备 ---
     species_lower <- tolower(species)
@@ -76,6 +80,13 @@ run_cell_cycle_regression <- function(obj, species = "mouse") {
         assay = "RNA",
         set.ident = TRUE
     )
+
+    # 若不回归，直接返回
+    if (!isTRUE(regression)) {
+        message(sprintf("%s[run_cell_cycle_regression] regression=FALSE: Skipping SCTransform regression.", get_icon("info")))
+        message(paste0(get_icon("completed"), "[run_cell_cycle_regression] Completed."))
+        return(obj)
+    }
 
     # --- 6. SCTransform 回归 ---
     message(sprintf("%s[run_cell_cycle_regression] Running SCTransform (regressing S.Score & G2M.Score)...", get_icon("step")))
