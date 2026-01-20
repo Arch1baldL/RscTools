@@ -89,6 +89,12 @@ run_cell_cycle_regression <- function(obj, species = "mouse", regression = TRUE)
     }
 
     # --- 6. SCTransform 回归 ---
+    # 若已有 SCT assay，先提示并清除，避免细胞/特征不一致的警告
+    if ("SCT" %in% names(obj@assays)) {
+        warning(paste0(get_icon("warning"), "[run_cell_cycle_regression] Existing 'SCT' assay detected; recreating via SCTransform."), call. = FALSE)
+        obj[["SCT"]] <- NULL
+    }
+
     message(sprintf("%s[run_cell_cycle_regression] Running SCTransform (regressing S.Score & G2M.Score)...", get_icon("step")))
     obj <- Seurat::SCTransform(
         obj,

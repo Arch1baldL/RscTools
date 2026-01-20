@@ -2,19 +2,24 @@
 % Please edit documentation in R/run_cell_cycle_regression.R
 \name{run_cell_cycle_regression}
 \alias{run_cell_cycle_regression}
-\title{Cell Cycle Scoring and SCTransform Regression (Force Normalize)}
+\title{Cell Cycle Scoring with Optional SCTransform Regression (Force Normalize)}
 \usage{
-run_cell_cycle_regression(obj, species = "mouse")
+run_cell_cycle_regression(obj, species = "mouse", regression = TRUE)
 }
 \arguments{
 \item{obj}{A Seurat object.}
 
 \item{species}{Character string. Supports "mouse" (default) and "human"; mouse genes are Title Case.}
+
+\item{regression}{Logical. If TRUE, performs SCTransform regression of S.Score and G2M.Score after scoring.
+If FALSE (default), only performs RNA normalization and cell cycle scoring without regression.}
 }
 \value{
-A Seurat object with a new 'SCT' assay containing regressed data.
+A Seurat object. If \code{regression=TRUE}, returns an object with a new 'SCT' assay containing regressed data.
+If \code{regression=FALSE} (default), returns the object after RNA normalization and cell cycle scoring only
+(no 'SCT' assay is created/updated).
 }
 \description{
-Force-log-normalizes RNA before scoring, then regresses cell cycle via SCTransform.
-Safe to run even if RNA data was already normalized.
+Force-log-normalizes RNA before scoring cell cycle, then optionally regresses
+cell cycle effects via SCTransform. Safe to run even if RNA data was already normalized.
 }
