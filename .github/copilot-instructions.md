@@ -14,6 +14,7 @@ Purpose: Help AI agents work productively in this small R package for single-cel
 ### Module Structure
 - `run_*` (workflow helpers): Accept a Seurat object (or a named list) and run standard analysis steps; keep side effects minimal (set/restore assay when needed; clean up temporary metadata); report progress via `message()/warning()/stop()`; return a Seurat object or a same-named list.
 - `plot_*` (plot polish): Read-only on `obj`; control appearance via column names/numeric args; extract coordinates/metadata with `Seurat::FetchData()`; consistently use `rlang::.data` to avoid NSE notes; prefer `theme_void()/coord_fixed()` for layout consistency.
+- Reuse existing helpers: when a capability already exists, call the helper instead of re-implementing (e.g., use `run_v5_test(..., join_layers=TRUE)` to merge v5 layers instead of manual layer handling).
 
 ### Development Workflow
 - Docs/NAMESPACE are roxygen2-driven (see `Roxygen` fields in [DESCRIPTION](DESCRIPTION)). After changing roxygen comments in [R/*.R](R):

@@ -22,7 +22,8 @@ Imports:
     Seurat,
     stats,
     stringr,
-    tibble
+    tibble,
+    Matrix
 Suggests: 
     glmGamPoi,
     CellChat
