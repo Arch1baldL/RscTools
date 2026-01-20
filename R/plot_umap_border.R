@@ -106,15 +106,14 @@ plot_umap_border <- function(
     # A. 散点
     ggplot2::geom_point(ggplot2::aes(color = .data$group_for_points), size = pt_size, alpha = 0.5) +
 
-    # B. 边界
+    # B. 边界（线条，无填充）
     ggplot2::stat_density_2d(
       data = umap_data_expanded,
-      ggplot2::aes(fill = .data$group_for_hulls, color = .data$group_for_hulls),
-      geom = "polygon",
+      ggplot2::aes(color = .data$group_for_hulls),
+      geom = "contour",
       contour_var = "ndensity",
       breaks = border_breaks,
       size = line_width,
-      alpha = 0.2,
       show.legend = FALSE
     ) +
 
