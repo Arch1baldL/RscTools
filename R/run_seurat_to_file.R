@@ -32,6 +32,8 @@ run_seurat_to_file <- function(object,
         stop(paste0(get_icon("error"), "[run_seurat_to_file] 'output_dir' cannot be empty."), call. = FALSE)
     }
 
+    # 统一输出到子目录：seurat_to_file
+    output_dir <- file.path(output_dir, "seurat_to_file")
     if (dir.exists(output_dir)) {
         existing <- setdiff(list.files(output_dir, all.files = TRUE, include.dirs = TRUE), c(".", ".."))
         if (length(existing) > 0 && !isTRUE(overwrite)) {
