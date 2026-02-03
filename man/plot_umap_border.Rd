@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_umap_border.R
 \name{plot_umap_border}
 \alias{plot_umap_border}
-\title{Plot UMAP with Density Borders}
+\title{Plot UMAP with Density Borders and Labels}
 \usage{
 plot_umap_border(
   obj,
@@ -14,37 +14,41 @@ plot_umap_border(
   pt_size = 0.5,
   line_width = 1.2,
   label_size = 5,
-  border_breaks = 0.1
+  show_labels = TRUE,
+  text_size = 4,
+  smoothness = 300
 )
 }
 \arguments{
-\item{obj}{A Seurat object containing UMAP coordinates.}
+\item{obj}{A Seurat object containing embeddings.}
 
-\item{group_points}{String. The metadata column name to use for coloring scatter points (e.g., "cell_cluster").}
+\item{group_points}{Metadata column for coloring points.}
 
-\item{group_borders}{String. The metadata column name to use for drawing borders (e.g., "cell_sub_type").
-If NULL, defaults to \code{group_points}.}
+\item{group_borders}{Metadata column for borders/labels; defaults to \code{group_points} when NULL or missing.}
 
-\item{reduction}{String. The dimensional reduction to use (default is "umap").}
+\item{reduction}{Dimensional reduction to use (default "umap").}
 
-\item{min_cells}{Integer. Minimum number of cells required in a group to draw a border. Groups with fewer cells will only show scatter points. Default is 10.}
+\item{min_cells}{Minimum cells per group to draw a border. Default 10.}
 
-\item{expand_ratio}{Numeric. The ratio to expand the bounding box for density calculation to avoid clipping. Default is 0.3 (30\%).}
+\item{expand_ratio}{Expand ratio to avoid clipping. Default 0.3.}
 
-\item{pt_size}{Numeric. Size of the scatter points. Default is 0.5.}
+\item{pt_size}{Point size. Default 0.5.}
 
-\item{line_width}{Numeric. Width of the border lines. Default is 1.2.}
+\item{line_width}{Border line width. Default 1.2.}
 
-\item{label_size}{Numeric. Font size for UMAP axis labels. Default is 5.}
+\item{label_size}{Axis label size. Default 5.}
 
-\item{border_breaks}{Numeric. Density threshold for drawing borders (passed to stat_density_2d breaks). Default is 0.15.}
+\item{show_labels}{Logical; show group labels. Default TRUE.}
+
+\item{text_size}{Label text size. Default 4.}
+
+\item{smoothness}{Grid density for stat_density_2d; larger gives smoother contours. Default 300.}
 }
 \value{
 A ggplot object.
 }
 \description{
-This function visualizes single-cell UMAP embeddings with scatter points and
-draws density borders around specified cell groups. It automatically handles
-UMAP axes with arrows and expands the plotting area to prevent border clipping.
-It auto-detects coordinate names based on the provided reduction.
+Visualize UMAP embeddings with scatter points, density borders, and optional
+group labels. Handles axis arrows and expands the plotting area to prevent
+border clipping.
 }

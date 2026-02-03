@@ -2,36 +2,24 @@
 % Please edit documentation in R/run_seurat_to_file.R
 \name{run_seurat_to_file}
 \alias{run_seurat_to_file}
-\title{Export a Seurat Object to Disk}
+\title{Export Seurat counts, metadata, and reductions}
 \usage{
 run_seurat_to_file(
   object,
   output_dir,
-  assay = NULL,
-  export_counts = TRUE,
-  export_data = TRUE,
-  export_metadata = TRUE,
-  export_reductions = TRUE,
-  reductions = NULL,
+  assay = "RNA",
+  layer = "counts",
   overwrite = FALSE
 )
 }
 \arguments{
-\item{object}{A Seurat object to export.}
+\item{object}{A Seurat object (v5+ recommended).}
 
-\item{output_dir}{Directory to write outputs (created if missing).}
+\item{output_dir}{Output directory (created if missing).}
 
-\item{assay}{Assay to export. Defaults to the object's default assay or "RNA".}
+\item{assay}{Assay name to export. Default "RNA".}
 
-\item{export_counts}{Logical. Save the counts slot as an RDS file. Default TRUE.}
-
-\item{export_data}{Logical. Save the normalized data slot as an RDS file. Default TRUE.}
-
-\item{export_metadata}{Logical. Save cell metadata as CSV. Default TRUE.}
-
-\item{export_reductions}{Logical. Save embeddings for selected reductions as CSV. Default TRUE.}
-
-\item{reductions}{Character vector of reductions to export. If NULL, exports all available reductions.}
+\item{layer}{Layer name to export. Default "counts".}
 
 \item{overwrite}{Logical. If FALSE (default), stops when output_dir exists and is not empty.}
 }
@@ -39,7 +27,7 @@ run_seurat_to_file(
 Invisibly returns the normalized output directory path.
 }
 \description{
-Save a Seurat object and its key components (counts/data matrices, metadata,
-and reduction coordinates) into a folder so downstream tools can consume the
-exported files directly.
+Export the counts matrix (as Matrix Market), barcodes/features, cell metadata,
+and all available reductions from a Seurat object (v5+) into a folder for
+downstream use (e.g., Python/Scanpy).
 }
