@@ -1,30 +1,32 @@
-#' Plot UMAP with Density Borders
+#' Plot UMAP with Density Borders and Labels
 #'
-#' This function visualizes single-cell UMAP embeddings with scatter points and
-#' draws density borders around specified cell groups. It automatically handles
-#' UMAP axes with arrows and expands the plotting area to prevent border clipping.
-#' It auto-detects coordinate names based on the provided reduction.
+#' Visualize UMAP embeddings with scatter points, density borders, and optional
+#' group labels. Handles axis arrows and expands the plotting area to prevent
+#' border clipping.
 #'
-#' @param obj A Seurat object containing UMAP coordinates.
-#' @param group_points String. The metadata column name to use for coloring scatter points (e.g., "cell_cluster").
-#' @param group_borders String. The metadata column name to use for drawing borders (e.g., "cell_sub_type").
-#'   If NULL, defaults to `group_points`.
-#' @param reduction String. The dimensional reduction to use (default is "umap").
-#' @param min_cells Integer. Minimum number of cells required in a group to draw a border. Groups with fewer cells will only show scatter points. Default is 10.
-#' @param expand_ratio Numeric. The ratio to expand the bounding box for density calculation to avoid clipping. Default is 0.3 (30%).
-#' @param pt_size Numeric. Size of the scatter points. Default is 0.5.
-#' @param line_width Numeric. Width of the border lines. Default is 1.2.
-#' @param label_size Numeric. Font size for UMAP axis labels. Default is 5.
-#' @param border_breaks Numeric. Density threshold for drawing borders (passed to stat_density_2d breaks). Default is 0.15.
+#' @param obj A Seurat object containing embeddings.
+#' @param group_points Metadata column for coloring points.
+#' @param group_borders Metadata column for borders/labels; defaults to `group_points` when NULL or missing.
+#' @param reduction Dimensional reduction to use (default "umap").
+#' @param min_cells Minimum cells per group to draw a border. Default 10.
+#' @param expand_ratio Expand ratio to avoid clipping. Default 0.3.
+#' @param pt_size Point size. Default 0.5.
+#' @param line_width Border line width. Default 1.2.
+#' @param label_size Axis label size. Default 5.
+#' @param show_labels Logical; show group labels. Default TRUE.
+#' @param text_size Label text size. Default 4.
+#' @param smoothness Grid density for stat_density_2d; larger gives smoother contours. Default 300.
 #'
 #' @return A ggplot object.
 #' @export
 #'
-#' @importFrom Seurat FetchData
+#' @importFrom Seurat FetchData Embeddings
 #' @importFrom ggplot2 ggplot aes geom_point stat_density_2d annotate theme_void theme coord_fixed scale_color_discrete margin arrow unit
-#' @importFrom dplyr filter group_by group_modify ungroup bind_rows %>%
+#' @importFrom dplyr filter group_by group_modify ungroup bind_rows summarise %>%
 #' @importFrom grid arrow unit
 #' @importFrom rlang .data
+#' @importFrom ggrepel geom_text_repel geom_label_repel
+#' @importFrom stats median
 
 plot_umap_border <- function(
   obj,
@@ -36,27 +38,46 @@ plot_umap_border <- function(
   pt_size = 0.5,
   line_width = 1.2,
   label_size = 5,
-  border_breaks = 0.1
+  show_labels = TRUE,
+  text_size = 4,
+  smoothness = 300
 ) {
   message(paste0(get_icon("step"), "[plot_umap_border] Plotting..."))
   if (is.null(group_borders)) {
     group_borders <- group_points
   }
+  # 参数已取消：以下为内部默认设置（如需调整可改此处）
+  border_breaks <- 0.1 # 原参数 border_breaks 的默认值
+
   # 1. 校验与坐标提取
-  # 检查 reduction 是否存在
   if (!reduction %in% names(obj@reductions)) {
     stop(paste0(get_icon("error"), "[plot_umap_border] Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")), call. = FALSE)
   }
 
-  # 动态获取坐标列名（如 "umap_1"、"UMAP_1"、"PC_1"）
-  # 使用 [[ ]] 访问 DimReduc 对象并读取列名
   coord_names <- colnames(obj[[reduction]])[1:2]
 
-  # 使用正确列名提取坐标与元数据
-  umap_data <- Seurat::FetchData(obj, vars = c(coord_names, group_points, group_borders))
+  # 元数据列校验
+  meta_cols <- colnames(obj[[]])
+  if (!group_points %in% meta_cols) {
+    stop(paste0(get_icon("error"), "[plot_umap_border] Metadata column '", group_points, "' not found."), call. = FALSE)
+  }
+  if (!group_borders %in% meta_cols) {
+    warning(paste0(get_icon("warning"), "[plot_umap_border] Metadata column '", group_borders, "' not found. Using '", group_points, "' for borders."), call. = FALSE)
+    group_borders <- group_points
+  }
 
-  # 统一内部列名（标准化为 UMAP_1/UMAP_2 以复用绘图逻辑）
-  colnames(umap_data) <- c("UMAP_1", "UMAP_2", "group_for_points", "group_for_hulls")
+  vars <- unique(c(coord_names, group_points, group_borders))
+  df <- Seurat::FetchData(obj, vars = vars)
+  umap_data <- data.frame(
+    UMAP_1 = df[[coord_names[1]]],
+    UMAP_2 = df[[coord_names[2]]],
+    group_for_points = df[[group_points]],
+    group_for_hulls = df[[group_borders]],
+    check.names = FALSE
+  )
+  if (is.factor(umap_data$group_for_hulls)) umap_data$group_for_hulls <- droplevels(umap_data$group_for_hulls)
+  if (is.factor(umap_data$group_for_points)) umap_data$group_for_points <- droplevels(umap_data$group_for_points)
+  umap_data <- umap_data[!is.na(umap_data$group_for_hulls), , drop = FALSE]
 
   # 2. 过滤：仅保留满足最小细胞数的分组用于绘制边界
   group_counts <- table(umap_data$group_for_hulls)
@@ -67,27 +88,32 @@ plot_umap_border <- function(
   }
 
   umap_data_for_contour <- umap_data %>%
+    dplyr::filter(!is.na(.data$group_for_hulls)) %>%
     dplyr::filter(.data$group_for_hulls %in% valid_groups)
 
   # 3. 扩展边界（幽灵点机制）
   umap_data_expanded <- umap_data_for_contour %>%
-    dplyr::group_by(.data$group_for_hulls) %>%
-    dplyr::group_modify(~ {
-      data <- .x
+    dplyr::group_split(.data$group_for_hulls) %>%
+    lapply(function(data) {
+      if (nrow(data) == 0) {
+        return(NULL)
+      }
       range_x <- range(data$UMAP_1)
       range_y <- range(data$UMAP_2)
       span_x <- diff(range_x) * expand_ratio
       span_y <- diff(range_y) * expand_ratio
+      grp_val <- data$group_for_hulls[1]
+      if (length(grp_val) == 0) grp_val <- NA_character_
 
       ghost_points <- data.frame(
         UMAP_1 = c(range_x[1] - span_x, range_x[2] + span_x, range_x[1] - span_x, range_x[2] + span_x),
         UMAP_2 = c(range_y[1] - span_y, range_y[2] + span_y, range_y[2] + span_y, range_y[1] - span_y),
-        group_for_points = NA
+        group_for_points = rep(NA_character_, 4),
+        group_for_hulls = rep(grp_val, 4)
       )
-      # dplyr::bind_rows 会利用分组上下文自动补齐缺失的分组列
       dplyr::bind_rows(data, ghost_points)
     }) %>%
-    dplyr::ungroup()
+    dplyr::bind_rows()
 
   # 4. 计算坐标轴位置
   min_x <- min(umap_data$UMAP_1)
@@ -100,22 +126,51 @@ plot_umap_border <- function(
   origin_y <- min_y - offset
   label_gap <- (max_x - min_x) * 0.02
 
-  # 5. 绘图
+  # 5. 标签位置
+  if (isTRUE(show_labels)) {
+    label_data <- umap_data_for_contour %>%
+      dplyr::group_by(group_for_hulls) %>%
+      dplyr::summarise(
+        UMAP_1 = stats::median(UMAP_1),
+        UMAP_2 = stats::median(UMAP_2),
+        .groups = "drop"
+      )
+  }
+
+  # 6. 绘图
   p <- ggplot2::ggplot(umap_data, ggplot2::aes(x = .data$UMAP_1, y = .data$UMAP_2)) +
 
     # A. 散点
     ggplot2::geom_point(ggplot2::aes(color = .data$group_for_points), size = pt_size, alpha = 0.5) +
 
-    # B. 边界（线条，无填充）
+    # B. 边界主线层（虚线、平滑）
     ggplot2::stat_density_2d(
       data = umap_data_expanded,
       ggplot2::aes(color = .data$group_for_hulls),
       geom = "contour",
       contour_var = "ndensity",
-      breaks = border_breaks,
+      breaks = border_breaks, # 使用内部默认阈值
       size = line_width,
+      linetype = "dashed",
+      n = smoothness,
       show.legend = FALSE
-    ) +
+    )
+
+  if (isTRUE(show_labels)) {
+    p <- p + ggrepel::geom_label_repel(
+      data = label_data,
+      ggplot2::aes(x = UMAP_1, y = UMAP_2, label = group_for_hulls, color = group_for_hulls),
+      fill = "white",
+      label.size = 0.6,
+      label.r = ggplot2::unit(0.15, "lines"),
+      size = text_size,
+      fontface = "bold",
+      seed = 42,
+      max.overlaps = Inf
+    )
+  }
+
+  p <- p +
 
     # C. 箭头坐标轴
     # X 轴
