@@ -8,12 +8,18 @@
 #' @param group_points Metadata column for coloring points.
 #' @param group_borders Metadata column for borders/labels; defaults to `group_points` when NULL or missing.
 #' @param reduction Dimensional reduction to use (default "umap").
+#' @param colors Named vector for manual color mapping. Names must match
+#'   `group_points` values (e.g., `c(Tcell = "#1f77b4", Bcell = "#ff7f0e")`).
+#'   Unspecified groups will fall back to the default palette; unnamed vectors
+#'   will trigger a warning.
+#' @param border_color Color string for the border lines. Default is "gray".
+#'   If set to NULL, borders are colored by `group_borders`.
 #' @param min_cells Minimum cells per group to draw a border. Default 10.
 #' @param expand_ratio Expand ratio to avoid clipping. Default 0.3.
 #' @param pt_size Point size. Default 0.5.
 #' @param line_width Border line width. Default 1.2.
 #' @param label_size Axis label size. Default 5.
-#' @param show_labels Logical; show group labels. Default TRUE.
+#' @param show_labels Character or Logical; "borders" (default), "points", or FALSE/NULL. TRUE is equivalent to "borders".
 #' @param text_size Label text size. Default 4.
 #' @param smoothness Grid density for stat_density_2d; larger gives smoother contours. Default 300.
 #'
@@ -33,12 +39,14 @@ plot_umap_border <- function(
   group_points,
   group_borders = NULL,
   reduction = "umap",
+  colors = NULL,
+  border_color = "gray",
   min_cells = 10,
   expand_ratio = 0.3,
   pt_size = 0.5,
   line_width = 1.2,
   label_size = 5,
-  show_labels = TRUE,
+  show_labels = "borders",
   text_size = 4,
   smoothness = 300
 ) {
@@ -46,14 +54,22 @@ plot_umap_border <- function(
   if (is.null(group_borders)) {
     group_borders <- group_points
   }
-  # 参数已取消：以下为内部默认设置（如需调整可改此处）
+
+  # Normalize show_labels
+  if (isTRUE(show_labels)) show_labels <- "borders"
+  if (isFALSE(show_labels) || is.null(show_labels)) show_labels <- "none"
+  if (!show_labels %in% c("borders", "points", "none")) {
+    warning(paste0(get_icon("warning"), "[plot_umap_border] Invalid show_labels option '", show_labels, "'. Defaulting to 'borders'."))
+    show_labels <- "borders"
+  }
+
+  # 内部绘图参数
   border_breaks <- 0.1 # 原参数 border_breaks 的默认值
 
   # 1. 校验与坐标提取
   if (!reduction %in% names(obj@reductions)) {
     stop(paste0(get_icon("error"), "[plot_umap_border] Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")), call. = FALSE)
   }
-
   coord_names <- colnames(obj[[reduction]])[1:2]
 
   # 元数据列校验
@@ -68,6 +84,7 @@ plot_umap_border <- function(
 
   vars <- unique(c(coord_names, group_points, group_borders))
   df <- Seurat::FetchData(obj, vars = vars)
+  # 仅准备用于计算边界的数据
   umap_data <- data.frame(
     UMAP_1 = df[[coord_names[1]]],
     UMAP_2 = df[[coord_names[2]]],
@@ -115,51 +132,66 @@ plot_umap_border <- function(
     }) %>%
     dplyr::bind_rows()
 
-  # 4. 计算坐标轴位置
-  min_x <- min(umap_data$UMAP_1)
-  min_y <- min(umap_data$UMAP_2)
-  max_x <- max(umap_data$UMAP_1)
+  # 4. 绘图 - 使用 plot_umap 作为基础
+  p <- plot_umap(
+    obj = obj,
+    group = group_points,
+    reduction = reduction,
+    colors = colors,
+    pt_size = pt_size,
+    label_size = label_size,
+    show_labels = FALSE, # 在此处禁用标签，统一由本函数管理
+    text_size = text_size
+  )
 
-  arrow_len <- (max_x - min_x) * 0.15
-  offset <- 1
-  origin_x <- min_x - offset
-  origin_y <- min_y - offset
-  label_gap <- (max_x - min_x) * 0.02
-
-  # 5. 标签位置
-  if (isTRUE(show_labels)) {
-    label_data <- umap_data_for_contour %>%
-      dplyr::group_by(group_for_hulls) %>%
-      dplyr::summarise(
-        UMAP_1 = stats::median(UMAP_1),
-        UMAP_2 = stats::median(UMAP_2),
-        .groups = "drop"
-      )
-  }
-
-  # 6. 绘图
-  p <- ggplot2::ggplot(umap_data, ggplot2::aes(x = .data$UMAP_1, y = .data$UMAP_2)) +
-
-    # A. 散点
-    ggplot2::geom_point(ggplot2::aes(color = .data$group_for_points), size = pt_size, alpha = 0.5) +
-
-    # B. 边界主线层（虚线、平滑）
-    ggplot2::stat_density_2d(
+  if (is.null(border_color)) {
+    p <- p + ggplot2::stat_density_2d(
       data = umap_data_expanded,
       ggplot2::aes(color = .data$group_for_hulls),
       geom = "contour",
       contour_var = "ndensity",
-      breaks = border_breaks, # 使用内部默认阈值
+      breaks = border_breaks,
       size = line_width,
       linetype = "dashed",
       n = smoothness,
       show.legend = FALSE
     )
+  } else {
+    p <- p + ggplot2::stat_density_2d(
+      data = umap_data_expanded,
+      ggplot2::aes(group = .data$group_for_hulls),
+      color = border_color,
+      geom = "contour",
+      contour_var = "ndensity",
+      breaks = border_breaks,
+      size = line_width,
+      linetype = "dashed",
+      n = smoothness,
+      show.legend = FALSE
+    )
+  }
 
-  if (isTRUE(show_labels)) {
+  # 6. 添加标签
+  if (show_labels != "none") {
+    # 确定用于生成标签的数据和分组列
+    label_df <- if (show_labels == "borders") umap_data_for_contour else umap_data
+    group_col <- if (show_labels == "borders") "group_for_hulls" else "group_for_points"
+
+    label_data <- label_df %>%
+      dplyr::filter(!is.na(.data[[group_col]])) %>%
+      dplyr::group_by(.data[[group_col]]) %>%
+      dplyr::summarise(
+        UMAP_1 = stats::median(UMAP_1),
+        UMAP_2 = stats::median(UMAP_2),
+        .groups = "drop"
+      )
+
+    # 统一列名以方便绘图
+    colnames(label_data)[1] <- "group_label"
+
     p <- p + ggrepel::geom_label_repel(
       data = label_data,
-      ggplot2::aes(x = UMAP_1, y = UMAP_2, label = group_for_hulls, color = group_for_hulls),
+      ggplot2::aes(x = UMAP_1, y = UMAP_2, label = group_label, color = group_label),
       fill = "white",
       label.size = 0.6,
       label.r = ggplot2::unit(0.15, "lines"),
@@ -170,40 +202,11 @@ plot_umap_border <- function(
     )
   }
 
-  p <- p +
-
-    # C. 箭头坐标轴
-    # X 轴
-    ggplot2::annotate("segment",
-      x = origin_x, xend = origin_x + arrow_len,
-      y = origin_y, yend = origin_y,
-      arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
-      size = 1, color = "black"
-    ) +
-    ggplot2::annotate("text",
-      x = origin_x + (arrow_len * 0.05), y = origin_y - label_gap,
-      label = "UMAP_1", hjust = 0, vjust = 1,
-      size = label_size, fontface = "bold"
-    ) +
-
-    # Y 轴
-    ggplot2::annotate("segment",
-      x = origin_x, xend = origin_x,
-      y = origin_y, yend = origin_y + arrow_len,
-      arrow = ggplot2::arrow(type = "open", length = ggplot2::unit(0.1, "inches")),
-      size = 1, color = "black"
-    ) +
-    ggplot2::annotate("text",
-      x = origin_x - label_gap, y = origin_y + (arrow_len * 0.05),
-      label = "UMAP_2", hjust = 0, vjust = 0, angle = 90,
-      size = label_size, fontface = "bold"
-    ) +
-
-    # D. 版式
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.margin = ggplot2::margin(20, 20, 20, 20)) +
-    ggplot2::coord_fixed(clip = "off") +
-    ggplot2::scale_color_discrete(name = "Group")
+  if (is.null(colors)) {
+    p <- p + ggplot2::scale_color_discrete(name = "Group")
+  } else {
+    p <- p + ggplot2::scale_color_manual(values = colors, name = "Group")
+  }
 
   message(paste0(get_icon("completed"), "[plot_umap_border] Completed."))
   return(p)

@@ -9,12 +9,14 @@ plot_umap_border(
   group_points,
   group_borders = NULL,
   reduction = "umap",
+  colors = NULL,
+  border_color = "gray",
   min_cells = 10,
   expand_ratio = 0.3,
   pt_size = 0.5,
   line_width = 1.2,
   label_size = 5,
-  show_labels = TRUE,
+  show_labels = "borders",
   text_size = 4,
   smoothness = 300
 )
@@ -28,6 +30,14 @@ plot_umap_border(
 
 \item{reduction}{Dimensional reduction to use (default "umap").}
 
+\item{colors}{Named vector for manual color mapping. Names must match
+\code{group_points} values (e.g., \code{c(Tcell = "#1f77b4", Bcell = "#ff7f0e")}).
+Unspecified groups will fall back to the default palette; unnamed vectors
+will trigger a warning.}
+
+\item{border_color}{Color string for the border lines. Default is "gray".
+If set to NULL, borders are colored by \code{group_borders}.}
+
 \item{min_cells}{Minimum cells per group to draw a border. Default 10.}
 
 \item{expand_ratio}{Expand ratio to avoid clipping. Default 0.3.}
@@ -38,7 +48,7 @@ plot_umap_border(
 
 \item{label_size}{Axis label size. Default 5.}
 
-\item{show_labels}{Logical; show group labels. Default TRUE.}
+\item{show_labels}{Character or Logical; "borders" (default), "points", or FALSE/NULL. TRUE is equivalent to "borders".}
 
 \item{text_size}{Label text size. Default 4.}
 
