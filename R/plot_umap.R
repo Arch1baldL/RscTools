@@ -1,6 +1,3 @@
-#+#+#+#+############################################
-#' Plot UMAP (No Borders)
-#'
 #' Visualize UMAP embeddings with scatter points and optional group labels,
 #' using the same styling as `plot_umap_border()` but without borders.
 #'
