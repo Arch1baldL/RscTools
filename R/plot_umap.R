@@ -34,6 +34,11 @@ plot_umap <- function(obj,
                       text_size = 4) {
     message(paste0(get_icon("step"), "[plot_umap] Plotting..."))
 
+    # show_labels 参数校验
+    if (!is.logical(show_labels) && !isTRUE(show_labels) && !isFALSE(show_labels)) {
+        stop(paste0(get_icon("error"), "[plot_umap] Invalid 'show_labels' argument: must be TRUE or FALSE."), call. = FALSE)
+    }
+
     # 1. 校验与坐标提取
     if (!reduction %in% names(obj@reductions)) {
         stop(paste0(get_icon("error"), "[plot_umap] Reduction '", reduction, "' not found in Seurat object. Available reductions: ", paste(names(obj@reductions), collapse = ", ")), call. = FALSE)
