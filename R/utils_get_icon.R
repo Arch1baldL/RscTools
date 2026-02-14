@@ -11,8 +11,8 @@ get_icon <- function(type) {
   switch(type,
     "step"      = "▶️ ", # 补齐 1 格
     "running"   = "⏳",
-    "completed" = "✅",
-    "info"      = "❕",
+    "completed" = "✅ ",
+    "info"      = "❗️", # 补齐 1 格
     "warning"   = "⚠️ ", # 补齐 1 格
     "error"     = "❌"
   )
